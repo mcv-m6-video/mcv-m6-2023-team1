@@ -7,3 +7,4 @@ paths:
 
 settings:
   plot_random_annotation: True
+  model: yolo

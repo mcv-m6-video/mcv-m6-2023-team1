@@ -1,7 +1,41 @@
 import xml.etree.ElementTree as ET
 
 import cv2
+import numpy as np
 from matplotlib import pyplot as plt
+import csv
+
+import csv
+
+
+def extract_rectangles_from_csv(path, start_frame86 = True):
+    """
+    Parses an XML annotation file in the csv format and extracts bounding box coordinates for cars in each frame.
+
+    Args:
+        - Path to annotation csv in AI City format
+    returns:
+        dict[frame_num] = [[x1, y1, x2, y2, score], [x1, y1, x2, y2, score], ...]
+        in top left and bottom right coordinates
+    """
+    ret_dict = {}
+
+    with open(path, 'r') as f:
+        reader = csv.reader(f, delimiter=',')
+        # next(reader)  # skip header row
+
+        for row in reader:
+            frame_num = f'f_{int(row[0]) - 1}'
+
+            if frame_num not in ret_dict:
+                ret_dict[frame_num] = []
+
+            #convert from center, width, height to top left, bottom right
+            ret_dict[frame_num].append(
+                [float(row[2]), float(row[3]), float(row[2]) + float(row[4]), float(row[3]) + float(row[5]),float(row[6])]
+            )
+
+    return ret_dict
 
 
 def extract_rectangles_from_xml(path_to_xml_file):
@@ -12,6 +46,9 @@ def extract_rectangles_from_xml(path_to_xml_file):
 
     Returns:
     - A dictionary of frame numbers and their corresponding car bounding box coordinates.
+        example: dict = {'f_0': [[x1, y1, x2, y2], [x1, y1, x2, y2], ...]]}
+        where x1, y1, x2, y2 are the coordinates of the bounding box in the top left and bottom right corners.
+
     """
 
     tree = ET.parse(path_to_xml_file)
@@ -42,7 +79,77 @@ def extract_rectangles_from_xml(path_to_xml_file):
 
     return frame_dict
 
-def plot_frame(frame, GT_rects, path_to_video):
+def get_IoU_boxa_boxb(boxa, boxb):
+    """
+    Computes the Intersection over Union (IoU) between two bounding boxes.
+    Args:
+    - boxa: bounding box a
+    - boxb: bounding box b
+
+    Returns:
+    - The IoU value between the two bounding boxes.
+    """
+
+    # Get the coordinates of the bounding boxes
+    x1_a, y1_a, x2_a, y2_a = boxa
+    x1_b, y1_b, x2_b, y2_b = boxb
+
+    # Compute the area of the intersection rectangle
+    x_left = max(x1_a, x1_b)
+    y_top = max(y1_a, y1_b)
+    x_right = min(x2_a, x2_b)
+    y_bottom = min(y2_a, y2_b)
+    intersection_area = max(0, x_right - x_left + 1) * max(0, y_bottom - y_top + 1)
+
+    # Compute the area of both bounding boxes
+    boxa_area = (x2_a - x1_a + 1) * (y2_a - y1_a + 1)
+    boxb_area = (x2_b - x1_b + 1) * (y2_b - y1_b + 1)
+
+    # Compute the IoU
+    iou = intersection_area / float(boxa_area + boxb_area - intersection_area)
+
+    return iou
+
+def get_frame_mean_IoU(gt_bboxes, det_bboxes):
+    frame_iou = [max([get_IoU_boxa_boxb(gt_bbox, det_bbox[:4]) for det_bbox in det_bboxes], default=0) for gt_bbox in gt_bboxes]
+    return np.mean(frame_iou)
+
+def get_mIoU(gt_bboxes_dict, det_bboxes_dict):
+    """
+    Computes the mean Intersection over Union (mIoU) between two sets of bounding boxes.
+    Args:
+    - gt_bboxes_dict: dictionary of ground truth bounding boxes
+    - det_bboxes_dict: dictionary of detected bounding boxes
+
+    Returns:
+    - The mIoU value between the two sets of bounding boxes.
+    """
+
+    # Initialize a list to hold the IoU values for each frame
+    iou_list = []
+
+    # Loop through each frame number in the ground truth dictionary
+    for frame_num in gt_bboxes_dict:
+
+        # Get the ground truth bounding boxes for the current frame
+        gt_bboxes = gt_bboxes_dict[frame_num]
+
+        # Get the detected bounding boxes for the current frame
+        det_bboxes = det_bboxes_dict[frame_num]
+
+        # Compute the IoU between the ground truth and detected bounding boxes
+        frame_iou = get_frame_mean_IoU(gt_bboxes, det_bboxes)
+
+        # Append the mean IoU value for the current frame to the list
+        iou_list.append(frame_iou)
+
+    # Compute the mean IoU value across all frames
+    mIoU = np.mean(iou_list)
+
+    return mIoU
+
+
+def plot_frame(frame, GT_rects, det_rects, path_to_video, frame_iou = None):
     """
     Plots the frame and the ground truth bounding boxes.
     Args:
@@ -50,6 +157,7 @@ def plot_frame(frame, GT_rects, path_to_video):
     - GT_rects: list of bounding box coordinates
     - path_to_video: path to the video file
     """
+    frame_str_num = frame[2:]
 
     # Read the video file
     cap = cv2.VideoCapture(path_to_video)
@@ -66,7 +174,15 @@ def plot_frame(frame, GT_rects, path_to_video):
 
     # Plot the bounding boxes
     for rect in GT_rects:
-        x1, y1, x2, y2 = rect
-        plt.gca().add_patch(plt.Rectangle((x1, y1), x2 - x1, y2 - y1, fill=False, edgecolor='red', linewidth=3))
+            x1, y1, x2, y2 = rect
+            plt.gca().add_patch(plt.Rectangle((x1, y1), x2 - x1, y2 - y1, fill=False, edgecolor='red', linewidth=3))
+    for rect in det_rects:
+        x1, y1, x2, y2, conf = rect
+        #plot rectangle and confidence on top
+        plt.gca().add_patch(plt.Rectangle((x1, y1), x2 - x1, y2 - y1, fill=False, edgecolor='green', linewidth=2))
+        plt.gca().text(x1, y1, 'Conf: {:.3f}'.format(conf), bbox=dict(facecolor='green', alpha=0.5), fontsize=6)
 
+    if frame_iou is not None:
+        plt.title(f"Frame {frame_str_num} IoU: {frame_iou:.3f}")
     plt.show()
+

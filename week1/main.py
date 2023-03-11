@@ -22,11 +22,13 @@ def main(cfg):
         frame = random.choice(list(GT_rects_aicity_full.keys()))
         #plot the frame
         frame_iou =  get_frame_mean_IoU(GT_rects_aicity_full[frame], det_rects_aicity_full[frame])
-        print("Frame: ", frame, " IoU: ",frame_iou)
+        frame_map = get_frame_ap(GT_rects_aicity_full[frame], det_rects_aicity_full[frame], confidence = True, n = 10, th=0.5)
+        print("Frame: ", frame, " IoU: ",frame_iou, " mAP: ",frame_map)
         plot_frame(frame, GT_rects_aicity_full[frame], det_rects_aicity_full[frame], cfg["paths"]["video"], frame_iou)
 
     #print mIoU for all frames
     print("mIoU for all frames: ", get_mIoU(GT_rects_aicity_full, det_rects_aicity_full))
+    print("mAP for all frames: ", get_allFrames_ap(GT_rects_aicity_full, det_rects_aicity_full, confidence = True, n = 10, th=0.5))
 
 
 

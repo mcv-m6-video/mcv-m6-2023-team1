@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 import csv
 
 
-def extract_rectangles_from_csv(path, start_frame86 = True):
+def extract_rectangles_from_csv(path, start_frame86=True):
     """
     Parses an XML annotation file in the csv format and extracts bounding box coordinates for cars in each frame.
 
@@ -28,9 +28,10 @@ def extract_rectangles_from_csv(path, start_frame86 = True):
             if frame_num not in ret_dict:
                 ret_dict[frame_num] = []
 
-            #convert from center, width, height to top left, bottom right
+            # convert from center, width, height to top left, bottom right
             ret_dict[frame_num].append(
-                [float(row[2]), float(row[3]), float(row[2]) + float(row[4]), float(row[3]) + float(row[5]),float(row[6])]
+                [float(row[2]), float(row[3]), float(row[2]) + float(row[4]), float(row[3]) + float(row[5]),
+                 float(row[6])]
             )
 
     return ret_dict
@@ -77,6 +78,7 @@ def extract_rectangles_from_xml(path_to_xml_file):
 
     return frame_dict
 
+
 def get_IoU_boxa_boxb(boxa, boxb):
     """
     Computes the Intersection over Union (IoU) between two bounding boxes.
@@ -108,9 +110,12 @@ def get_IoU_boxa_boxb(boxa, boxb):
 
     return iou
 
+
 def get_frame_mean_IoU(gt_bboxes, det_bboxes):
-    frame_iou = [max([get_IoU_boxa_boxb(gt_bbox, det_bbox[:4]) for det_bbox in det_bboxes], default=0) for gt_bbox in gt_bboxes]
+    frame_iou = [max([get_IoU_boxa_boxb(gt_bbox, det_bbox[:4]) for det_bbox in det_bboxes], default=0) for gt_bbox in
+                 gt_bboxes]
     return np.mean(frame_iou)
+
 
 def get_mIoU(gt_bboxes_dict, det_bboxes_dict):
     """
@@ -128,7 +133,6 @@ def get_mIoU(gt_bboxes_dict, det_bboxes_dict):
 
     # Loop through each frame number in the ground truth dictionary
     for frame_num in gt_bboxes_dict:
-
         # Get the ground truth bounding boxes for the current frame
         gt_bboxes = gt_bboxes_dict[frame_num]
 
@@ -145,6 +149,7 @@ def get_mIoU(gt_bboxes_dict, det_bboxes_dict):
     mIoU = np.mean(iou_list)
 
     return mIoU
+
 
 def ap_voc(frame_iou, total_gt, th):
     """
@@ -167,25 +172,27 @@ def ap_voc(frame_iou, total_gt, th):
             tp[i] = 1
         else:
             fp[i] = 1
-        
+
     # Tabulate the cummulative sum of the true and false positives
     tp = np.cumsum(tp)
     fp = np.cumsum(fp)
 
-    #Compute Precision and Recall
-    precision = tp / (tp+fp) # cummulative true positives / cummulative true positive + cummulative false positives
-    recall = tp / float(total_gt) # cummulative true positives / total ground truths
+    # Compute Precision and Recall
+    precision = tp / (tp + fp)  # cummulative true positives / cummulative true positive + cummulative false positives
+    recall = tp / float(total_gt)  # cummulative true positives / total ground truths
 
-    #AP measurement according to the equations 1 and 2 in page 11 of https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.167.6629&rep=rep1&type=pdf
+    # AP measurement according to the equations 1 and 2 in page 11 of
+    # https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.167.6629&rep=rep1&type=pdf
     ap = 0.
     for r in np.arange(0, 1.1, 0.1):
         if any(recall >= r):
             ap += np.max(precision[recall >= r])
-    
-    ap = ap/11
+
+    ap = ap / 11
     return ap
 
-def get_frame_ap(gt_bboxes, det_bboxes, confidence = False, n = 10, th=0.5):
+
+def get_frame_ap(gt_bboxes, det_bboxes, confidence=False, n=10, th=0.5):
     """
     Computes the Average Precision (AP) in a frame according to Pascal Visual Object Classes (VOC) Challenge.
     Args:
@@ -203,11 +210,12 @@ def get_frame_ap(gt_bboxes, det_bboxes, confidence = False, n = 10, th=0.5):
     det_bboxes.sort(reverse=True, key=lambda x: x[4])
 
     # Calculate the IoU of each detected bbox. 
-    frame_iou = [max([get_IoU_boxa_boxb(gt_bbox, det_bbox[:4]) for gt_bbox in gt_bboxes], default=0) for det_bbox in det_bboxes]
+    frame_iou = [max([get_IoU_boxa_boxb(gt_bbox, det_bbox[:4]) for gt_bbox in gt_bboxes], default=0) for det_bbox in
+                 det_bboxes]
 
     # Compute the AP
     ap = 0.
-    total_gt = len(gt_bboxes)  
+    total_gt = len(gt_bboxes)
     if confidence:
         ap = ap_voc(frame_iou, total_gt, th)
     else:
@@ -216,21 +224,22 @@ def get_frame_ap(gt_bboxes, det_bboxes, confidence = False, n = 10, th=0.5):
         for i in range(n):
             random.shuffle(frame_iou)
             ap_list.append(ap_voc(frame_iou, total_gt, th))
-        
+
         # Do the average of the computed APs 
         ap = np.mean(ap_list)
 
     return ap
 
-def get_allFrames_ap(gt_bboxes_dict, det_bboxes_dict, confidence = False, n = 10, th=0.5):
+
+def get_allFrames_ap(gt_bboxes_dict, det_bboxes_dict, confidence=False, n=10, th=0.5):
     """
     Computes the mean Average Precision (mAP) of all the detections done in the video according to Pascal Visual Object Classes (VOC) Challenge.
     Args:
     - gt_bboxes_dict: dictionary of ground truth bounding boxes
     - det_bboxes_dict: dictionary of detected bounding boxes
-    - confidence: True if we have the confidence score 
+    - confidence: True if we have the confidence score
     - n: Number of random sorted sets.
-    - th: float defining a threshold of IoU metric. If IoU is higher than th, 
+    - th: float defining a threshold of IoU metric. If IoU is higher than th,
           then the detected bb is a TP, otherwise is a FP.
 
     Returns:
@@ -242,7 +251,6 @@ def get_allFrames_ap(gt_bboxes_dict, det_bboxes_dict, confidence = False, n = 10
 
     # Loop through each frame number in the ground truth dictionary
     for frame_num in gt_bboxes_dict:
-
         # Get the ground truth bounding boxes for the current frame
         gt_bboxes = gt_bboxes_dict[frame_num]
 
@@ -260,7 +268,8 @@ def get_allFrames_ap(gt_bboxes_dict, det_bboxes_dict, confidence = False, n = 10
 
     return map
 
-def plot_frame(frame, GT_rects, det_rects, path_to_video, frame_iou = None):
+
+def plot_frame(frame, gt_rects, det_rects, path_to_video, frame_iou=None):
     """
     Plots the frame and the ground truth bounding boxes.
     Args:
@@ -284,12 +293,12 @@ def plot_frame(frame, GT_rects, det_rects, path_to_video, frame_iou = None):
     plt.imshow(frame)
 
     # Plot the bounding boxes
-    for rect in GT_rects:
-            x1, y1, x2, y2 = rect
-            plt.gca().add_patch(plt.Rectangle((x1, y1), x2 - x1, y2 - y1, fill=False, edgecolor='red', linewidth=3))
+    for rect in gt_rects:
+        x1, y1, x2, y2 = rect
+        plt.gca().add_patch(plt.Rectangle((x1, y1), x2 - x1, y2 - y1, fill=False, edgecolor='red', linewidth=3))
     for rect in det_rects:
         x1, y1, x2, y2, conf = rect
-        #plot rectangle and confidence on top
+        # plot rectangle and confidence on top
         plt.gca().add_patch(plt.Rectangle((x1, y1), x2 - x1, y2 - y1, fill=False, edgecolor='green', linewidth=2))
         plt.gca().text(x1, y1, 'Conf: {:.3f}'.format(conf), bbox=dict(facecolor='green', alpha=0.5), fontsize=6)
 

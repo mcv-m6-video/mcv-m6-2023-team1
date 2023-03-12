@@ -3,8 +3,10 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
+from week1.flow_vis import flow_to_color
 
-def read_optical_flow(path):
+
+def read_optical_flow(path: str) -> (np.ndarray, np.ndarray):
     flow = cv2.imread(path, cv2.IMREAD_UNCHANGED).astype("float32")
 
     # flow without occlusions
@@ -20,7 +22,7 @@ def read_optical_flow(path):
     return mask, new_flow
 
 
-def compute_error(flow_gt, flow_det):
+def compute_error(flow_gt: np.ndarray, flow_det: np.ndarray) -> float:
     """
     compute squared difference (error) between gt and detection
     """
@@ -50,4 +52,51 @@ def histogram_error(error):
     plt.title("Histogram of error for non-occluded areas")
     plt.xlabel("Squared error")
     plt.ylabel("Number of pixels")
+    plt.show()
+
+
+def plot_flow(flow_array: np.ndarray):
+    """
+    Plots the flow vectors in a 3x3 grid.
+
+    :param flow_array: numpy array of shape (H, W, 3) containing the flow vectors
+    """
+    fig, axes = plt.subplots(1, 3, figsize=(16, 8))
+    images = np.dsplit(flow_array, 3)
+    titles = ['u_flow', 'v_flow', 'v_mask']
+
+    for ax, image, title in zip(axes.flatten(), images, titles):
+        ax.imshow(image)
+        ax.set_title(title, fontsize=12)
+    plt.tight_layout()
+    plt.show()
+
+
+def show_field(flow, gray, step=30, scale=0.5):
+    plt.figure(figsize=(16, 8))
+    plt.imshow(gray, cmap='gray')
+
+    u = flow[:, :, 0]
+    v = flow[:, :, 1]
+    h = np.hypot(u, v)
+
+    (height, w) = flow.shape[0:2]
+    x, y = np.meshgrid(np.arange(0, w), np.arange(0, height))
+
+    x = x[::step, ::step]
+    y = y[::step, ::step]
+    u = u[::step, ::step]
+    v = v[::step, ::step]
+    h = h[::step, ::step]
+
+    plt.quiver(x, y, u, v, h, scale_units='xy', angles='xy', scale=scale)
+
+    plt.axis('off')
+    plt.show()
+
+
+def plot_flow_to_color(flow: np.ndarray):
+    plt.figure(figsize=(16, 8))
+    plt.axis('off')
+    plt.imshow(flow_to_color(flow))
     plt.show()

@@ -199,15 +199,35 @@ def get_frame_ap(gt_bboxes, det_bboxes, confidence = False, n = 10, th=0.5):
     Returns:
     - The AP value of the bb detected in the frame.
     """
+    total_gt = len(gt_bboxes)
+    
     # sort det_bboxes by confidence score in descending order
     det_bboxes.sort(reverse=True, key=lambda x: x[4])
 
     # Calculate the IoU of each detected bbox. 
-    frame_iou = [max([get_IoU_boxa_boxb(gt_bbox, det_bbox[:4]) for gt_bbox in gt_bboxes], default=0) for det_bbox in det_bboxes]
-
+    #frame_iou = [max([get_IoU_boxa_boxb(gt_bbox, det_bbox[:4]) for gt_bbox in gt_bboxes], default=0) for det_bbox in det_bboxes]
+    
+    # V2 taking into account that each GT box can only be assigned to one predicted box   
+    frame_iou = [[get_IoU_boxa_boxb(gt_bbox, det_bbox[:4]) for gt_bbox in gt_bboxes] for det_bbox in det_bboxes]
+    idx_assigned = []
+    for i in range(len(frame_iou)):
+        bb_assigned = False    
+        bb_num = 0 #To avoid an infinit while loop in case all the bboxes with IoU higher than 0 were assigned
+        while ((not bb_assigned) and (bb_num != (total_gt-1))):
+            idx_max = np.argmax(frame_iou[i])
+            if any(idx_max == idx_assigned):
+                frame_iou[i][idx_max] = 0
+                bb_num +=1
+            else:
+                frame_iou[i] = frame_iou[i][idx_max]
+                idx_assigned.append(idx_max)
+                bb_assigned = True
+        if not bb_assigned:
+            frame_iou[i] = 0.
+    
     # Compute the AP
     ap = 0.
-    total_gt = len(gt_bboxes)  
+      
     if confidence:
         ap = ap_voc(frame_iou, total_gt, th)
     else:

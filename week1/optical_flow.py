@@ -3,8 +3,6 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-from week1.flow_vis import flow_to_color
-
 
 def read_optical_flow(path: str) -> (np.ndarray, np.ndarray):
     flow = cv2.imread(path, cv2.IMREAD_UNCHANGED).astype("float32")
@@ -63,7 +61,7 @@ def plot_flow(flow_array: np.ndarray):
     """
     fig, axes = plt.subplots(1, 3, figsize=(16, 8))
     images = np.dsplit(flow_array, 3)
-    titles = ['u_flow', 'v_flow', 'v_mask']
+    titles = ['u_flow', 'v_flow', 'mask']
 
     for ax, image, title in zip(axes.flatten(), images, titles):
         ax.imshow(image)
@@ -72,31 +70,60 @@ def plot_flow(flow_array: np.ndarray):
     plt.show()
 
 
-def show_field(flow, gray, step=30, scale=0.5):
+def show_field(flow: np.ndarray, gray: np.ndarray, step: int = 30, scale: float = 0.5):
+    """
+    Plots the flow vectors on top of the gray image.
+
+    :param flow: flow field, only the first two channels are used
+    :param gray: gray image
+    :param step: step size for the flow vectors, every step-th vector is plotted
+    :param scale: scale of the flow vectors, the length of the vectors is multiplied by this value
+    """
     plt.figure(figsize=(16, 8))
     plt.imshow(gray, cmap='gray')
 
     u = flow[:, :, 0]
     v = flow[:, :, 1]
-    h = np.hypot(u, v)
+    hyp = np.hypot(u, v)
 
-    (height, w) = flow.shape[0:2]
-    x, y = np.meshgrid(np.arange(0, w), np.arange(0, height))
+    (h, w) = flow.shape[0:2]
+    x, y = np.meshgrid(np.arange(0, w), np.arange(0, h))
 
-    x = x[::step, ::step]
-    y = y[::step, ::step]
-    u = u[::step, ::step]
-    v = v[::step, ::step]
-    h = h[::step, ::step]
+    # For every step-th vector, take the x, y, u, v, hyp values
+    x, y, u, v, hyp = (a[::step, ::step] for a in (x, y, u, v, hyp))
 
-    plt.quiver(x, y, u, v, h, scale_units='xy', angles='xy', scale=scale)
+    plt.quiver(x, y, u, v, hyp, scale_units='xy', angles='xy', scale=scale, cmap='magma')
 
     plt.axis('off')
     plt.show()
 
 
-def plot_flow_to_color(flow: np.ndarray):
-    plt.figure(figsize=(16, 8))
-    plt.axis('off')
-    plt.imshow(flow_to_color(flow))
+def draw_opt_flow_magnitude_and_direction(flow: np.ndarray):
+    """
+    Function to plot the magnitude and direction of an optical flow field.
+    :param flow: np.array
+    """
+    # Compute the magnitude and direction of the flow
+    magnitude, angle = cv2.cartToPolar(flow[..., 0], flow[..., 1], angleInDegrees=False)
+
+    # Clip the highest magnitude values according to the 0.95 quantile
+    clip_th = np.quantile(magnitude, 0.95)
+    magnitude = np.clip(magnitude, 0, clip_th)
+
+    # Normalize
+    magnitude = cv2.normalize(magnitude, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+
+    # Convert direction to HSV color space
+    hsv = np.zeros_like(flow, dtype=np.uint8)
+    hsv[..., 0] = angle / 2 / np.pi * 179
+    hsv[..., 1] = magnitude
+    hsv[..., 2] = 255
+    direction = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
+
+    # Plots
+    fig, axs = plt.subplots(2, 1, figsize=(8, 8))
+    axs[0].set_title('Optical Flow Magnitude')
+    axs[0].imshow(magnitude, cmap='gray')
+    axs[1].set_title('Optical Flow Direction')
+    axs[1].imshow(direction)
     plt.show()

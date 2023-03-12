@@ -3,4 +3,6 @@ gt_flow_path: '../dataset/data_stereo_flow/training/flow_noc/'
 img_path: '../dataset/data_stereo_flow/training/colored_0/'
 
 img_1: 'LKflow_000045_10.png'
-img_2: '000157_10.png'
+img_1_gt: '000045_10.png'
+img_2: 'LKflow_000045_10.png'
+img_2_gt: '000157_10.png'

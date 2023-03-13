@@ -111,10 +111,29 @@ def get_IoU_boxa_boxb(boxa, boxb):
     return iou
 
 
+# def get_frame_mean_IoU(gt_bboxes, det_bboxes): #THIS ONE DID'T TAKE INTO ACCOUNT GT USED
+#     frame_iou = [max([get_IoU_boxa_boxb(gt_bbox, det_bbox[:4]) for det_bbox in det_bboxes], default=0) for gt_bbox in
+#                  gt_bboxes]
+#     return np.mean(frame_iou)
+
 def get_frame_mean_IoU(gt_bboxes, det_bboxes):
-    frame_iou = [max([get_IoU_boxa_boxb(gt_bbox, det_bbox[:4]) for det_bbox in det_bboxes], default=0) for gt_bbox in
-                 gt_bboxes]
+    used_gt_idxs = set()  # keep track of which ground truth boxes have already been used
+    frame_iou = []
+    for det_bbox in det_bboxes:
+        max_iou = 0
+        max_gt_idx = None
+        for i, gt_bbox in enumerate(gt_bboxes):
+            if i in used_gt_idxs:
+                continue  # skip ground truth boxes that have already been used
+            iou = get_IoU_boxa_boxb(gt_bbox, det_bbox[:4])
+            if iou > max_iou:
+                max_iou = iou
+                max_gt_idx = i
+        if max_gt_idx is not None:
+            used_gt_idxs.add(max_gt_idx)
+            frame_iou.append(max_iou)
     return np.mean(frame_iou)
+
 
 
 def get_mIoU(gt_bboxes_dict, det_bboxes_dict):

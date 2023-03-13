@@ -299,13 +299,13 @@ def get_allFrames_ap(gt_bboxes_dict, det_bboxes_dict, confidence=False, n=10, th
         # Get the detected bounding boxes for the current frame
         det_bboxes = det_bboxes_dict[frame_num]
 
-        # Compute the IoU between the ground truth and detected bounding boxes
+        # Compute the mAP between the ground truth and detected bounding boxes
         frame_ap = get_frame_ap(gt_bboxes, det_bboxes, confidence, n, th)
 
-        # Append the mean IoU value for the current frame to the list
+        # Append the mean mAP value for the current frame to the list
         ap_list.append(frame_ap)
 
-    # Compute the mean IoU value across all frames
+    # Compute the mean mAP value across all frames
     map = np.mean(ap_list)
 
     return map
@@ -348,3 +348,71 @@ def plot_frame(frame, gt_rects, det_rects, path_to_video, frame_iou=None):
         plt.title(f"Frame {frame_str_num} IoU: {frame_iou:.3f}")
     plt.show()
 
+
+def addNoise(gt_bboxes, res = [1920, 1080], pos=False, max_pxdisplacement = 10, size=False, max_scale = 1., min_scale = 0.1, removebbox=False, ratio_removebbox = 0.2, addbbox = False, ratio_addbbox = 0.2):
+    """
+    Adds noise to the ground truth bounding boxes changing their size, position and adding/removing them.
+    Args:
+    - gt_bboxes: dictionary of bounding boxes ground truth
+    - res: 2D list that specifies the width and height of the frame.
+    - pos: bool to enable the random change of position - Default value: False
+    - max_pxdisplacement: int defining the maximum pixels we allow to move the bounding boxes - Default value: 10 pixels
+    - size: bool to enable the random change of bounding boxes size - Default value: False
+    - max_scale: float that defines the maximum scale we want to apply to the bounding boxes - Default value: 1. (no scaling)
+    - min_scale: float that defines the minimum scale we want to apply to the bounding boxes - Default value: 0.1 (10 times reduced the size of the bbox)
+    - removebbox: bool that enables the reduction of the quantity of bounding boxes in the ground truth - Default value: False
+    - ratio_removebbox: float that defines the percentage of bounding boxes we want to remove - Default value: 0.2 (20%)
+    - addbox: bool that enables the generation of new bounding boxes in the gound truth - Default value: False
+    - ratio_addbbox: float that defines the percentage of bounding boxes we want to add - Default value: 0.2 (20%) 
+    """
+    noisy_gtbb = gt_bboxes
+
+    for bbox in noisy_gtbb:
+        #bbox format = [left, top, right, bottom]
+        if pos:
+            offset_x = random.randint(-max_pxdisplacement, max_pxdisplacement)
+            offset_y = random.randint(-max_pxdisplacement, max_pxdisplacement)
+
+            if bbox[2]+offset_x < res[0] and bbox[0]+offset_x > 0:
+                bbox[0] += offset_x
+                bbox[2] += offset_x
+            if bbox[3]+offset_y < res[1] and bbox[1]+offset_y > 0:
+                bbox[1] += offset_y
+                bbox[3] += offset_y
+
+        if size:
+            #find center of bbox
+            center_x = ((bbox[2] - bbox[0]) / 2) + bbox[0]
+            center_y = ((bbox[3] - bbox[1]) / 2) + bbox[1]
+
+            #scale bbox
+            scale_x = random.uniform(min_scale, max_scale)
+            scale_y = random.uniform(min_scale, max_scale)
+
+            if ((bbox[2]-center_x) * scale_x + center_x) < res[0]:
+                bbox[0] = (bbox[0]-center_x) * scale_x + center_x
+                bbox[2] = (bbox[2]-center_x) * scale_x + center_x
+            if ((bbox[3]-center_y) * scale_y + center_y) < res[1]:
+                bbox[1] = (bbox[1]-center_y) * scale_y + center_y
+                bbox[3] = (bbox[3]-center_y) * scale_y + center_y
+
+    if removebbox:
+        num_bbox = int(len(gt_bboxes)*ratio_removebbox)
+        for i in range(num_bbox):
+            idx = random.randint(0, len(noisy_gtbb)-1-i)
+            del noisy_gtbb[idx]
+    
+    if addbbox:
+        num_bbox = int(len(gt_bboxes)*ratio_addbbox)
+        for i in range(num_bbox):
+            width = random.randint(10, res[0])
+            height = random.randint(10, res[1])
+            left = random.randint(0, res[0]- width)
+            top = random.randint(0, res[1]- height)
+            right = left + width
+            bottom = top + height            
+            noisy_gtbb.append([left, top, right, bottom])
+    
+    return noisy_gtbb
+
+    

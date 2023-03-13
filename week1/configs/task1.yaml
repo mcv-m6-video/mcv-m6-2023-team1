@@ -8,3 +8,15 @@ paths:
 settings:
   plot_random_annotation: True
   model: yolo
+
+noise:
+  res: [1920, 1080]
+  pos: False
+  max_pxdisplacement: 50
+  size: True
+  max_scale: 1.5
+  min_scale: 0.1
+  removebbox: False
+  ratio_removebbox: 0.2
+  addbbox: False
+  ratio_addbbox: 0.2

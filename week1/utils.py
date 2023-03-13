@@ -399,14 +399,14 @@ def addNoise(gt_bboxes, res = [1920, 1080], pos=False, max_pxdisplacement = 10, 
     if removebbox:
         num_bbox = int(len(gt_bboxes)*ratio_removebbox)
         for i in range(num_bbox):
-            idx = random.randint(0, len(noisy_gtbb)-1-i)
+            idx = random.randint(0, len(noisy_gtbb)-1)
             del noisy_gtbb[idx]
     
     if addbbox:
         num_bbox = int(len(gt_bboxes)*ratio_addbbox)
         for i in range(num_bbox):
-            width = random.randint(10, res[0])
-            height = random.randint(10, res[1])
+            width = random.randint(50, 300)
+            height = int(random.uniform(0.6, 1.4)*width)
             left = random.randint(0, res[0]- width)
             top = random.randint(0, res[1]- height)
             right = left + width

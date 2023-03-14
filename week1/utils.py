@@ -134,7 +134,11 @@ def get_frame_mean_IoU(gt_bboxes, det_bboxes):
         if max_gt_idx is not None:
             used_gt_idxs.add(max_gt_idx)
             frame_iou.append(max_iou)
-        else: #IF NO GT BOXES ARE FOUND, THEN THE DETECTION IS A FALSE POSITIVE. Penalize it by giving it an IoU of 0
+        else: #False Positives (aka pred boxes that do not intersect with any gt box)
+            frame_iou.append(0)
+    #False negative: check if there are any ground truth boxes that were not used
+    for i, gt_bbox in enumerate(gt_bboxes):
+        if i not in used_gt_idxs:
             frame_iou.append(0)
     return np.mean(frame_iou)
 

@@ -17,7 +17,7 @@ def main(cfg: Dict):
     if cfg["settings"]["plot_random_annotation"]:
         # get a random frame labels from gt_rects_aicity_full
         #frame = random.choice(list(gt_rects_aicity_full.keys()))
-        frame = 'f_1558'
+        frame = 1558
         
         if cfg["noise"]["size"]:
             scales = cfg["noise"]["max_scale"]
@@ -27,7 +27,7 @@ def main(cfg: Dict):
                                     max_scale = scale, min_scale = scale)
                 # plot the frame
                 frame_iou = get_frame_mean_IoU(gt_bboxes, det_rects_aicity_full[frame])
-                frame_map = get_frame_ap(gt_bboxes, det_rects_aicity_full[frame], confidence=True, n=10,
+                frame_map = get_frame_ap(gt_bboxes, det_rects_aicity_full[frame], confidence=False, n=10,
                                         th=0.5)
                 print("Scale: ", scale, " IoU: ", frame_iou, " mAP: ", frame_map)
                 #plot_frame(frame, gt_bboxes, det_rects_aicity_full[frame], cfg["paths"]["video"], frame_iou)
@@ -39,7 +39,7 @@ def main(cfg: Dict):
                                     max_pxdisplacement = traslation)
                 # plot the frame
                 frame_iou = get_frame_mean_IoU(gt_bboxes, det_rects_aicity_full[frame])
-                frame_map = get_frame_ap(gt_bboxes, det_rects_aicity_full[frame], confidence=True, n=10,
+                frame_map = get_frame_ap(gt_bboxes, det_rects_aicity_full[frame], confidence=False, n=10,
                                         th=0.5)
                 print("Max Displacement: ", traslation, " IoU: ", frame_iou, " mAP: ", frame_map)
                 #plot_frame(frame, gt_bboxes, det_rects_aicity_full[frame], cfg["paths"]["video"], frame_iou)
@@ -51,7 +51,7 @@ def main(cfg: Dict):
                 
                 # plot the frame
                 frame_iou = get_frame_mean_IoU(gt_bboxes, det_rects_aicity_full[frame])
-                frame_map = get_frame_ap(gt_bboxes, det_rects_aicity_full[frame], confidence=True, n=10,
+                frame_map = get_frame_ap(gt_bboxes, det_rects_aicity_full[frame], confidence=False, n=10,
                                         th=0.5)
                 print("Percentage of bboxes removed: ", ratio*100, "% IoU: ", frame_iou, " mAP: ", frame_map)
                 #plot_frame(frame, gt_bboxes, det_rects_aicity_full[frame], cfg["paths"]["video"], frame_iou)
@@ -63,7 +63,7 @@ def main(cfg: Dict):
                 
                 # plot the frame
                 frame_iou = get_frame_mean_IoU(gt_bboxes, det_rects_aicity_full[frame])
-                frame_map = get_frame_ap(gt_bboxes, det_rects_aicity_full[frame], confidence=True, n=10,
+                frame_map = get_frame_ap(gt_bboxes, det_rects_aicity_full[frame], confidence=False, n=10,
                                         th=0.5)
                 print("Percentage of bboxes added: ", ratio*100, "% IoU: ", frame_iou, " mAP: ", frame_map)
                 #plot_frame(frame, gt_bboxes, det_rects_aicity_full[frame], cfg["paths"]["video"], frame_iou)

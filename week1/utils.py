@@ -352,6 +352,7 @@ def plot_frame(frame, gt_rects, det_rects, path_to_video, frame_iou=None, save_f
         plt.show()
     elif save_frame:
         plt.savefig(file_path)
+        plt.close()
 
 def plot_iou_vs_frames(ious_list:List, file_path=None, save_fig=False) -> None:
     """
@@ -376,6 +377,7 @@ def plot_iou_vs_frames(ious_list:List, file_path=None, save_fig=False) -> None:
         plt.show()
     elif save_fig:
         plt.savefig(file_path)
+        plt.close()
 
 def sort_dict(dict):
     frames_num_str = list(dict.keys())
@@ -393,7 +395,7 @@ def make_gif(gt_bboxes_dict, det_bboxes_dict, cfg):
     for frame in gt_bboxes_dict:
         ious_filepath = os.path.join(ious_files_prefix, str(frame)+".png")
         detection_filepath = os.path.join(detection_files_prefix, str(frame)+".png")
-
+        ious_list.append(get_frame_mean_IoU(gt_bboxes_dict[frame], det_bboxes_dict[frame]))
         plot_frame(frame, gt_bboxes_dict[frame], det_bboxes_dict[frame], cfg["paths"]["video"], save_frame=True, file_path=detection_filepath)
         plot_iou_vs_frames(ious_list, file_path=ious_filepath, save_fig=True )
 

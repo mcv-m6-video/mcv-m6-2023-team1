@@ -4,7 +4,9 @@ import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 import csv
-
+from typing import List, Dict
+import os
+from matplotlib.animation import FuncAnimation
 
 def extract_rectangles_from_csv(path, start_frame86=True):
     """
@@ -34,7 +36,7 @@ def extract_rectangles_from_csv(path, start_frame86=True):
                  float(row[6])]
             )
 
-    return ret_dict
+    return sort_dict(ret_dict)
 
 
 def extract_rectangles_from_xml(path_to_xml_file):
@@ -76,7 +78,7 @@ def extract_rectangles_from_xml(path_to_xml_file):
             # Append the bounding box coordinates to the list for the current frame number
             frame_dict[frame_num].append([x1, y1, x2, y2])
 
-    return frame_dict
+    return sort_dict(frame_dict)
 
 
 def get_IoU_boxa_boxb(boxa, boxb):
@@ -170,7 +172,7 @@ def get_mIoU(gt_bboxes_dict, det_bboxes_dict):
     # Compute the mean IoU value across all frames
     mIoU = np.mean(iou_list)
 
-    return mIoU
+    return mIoU, iou_list
 
 
 def ap_voc(frame_iou, total_gt, th):
@@ -311,7 +313,7 @@ def get_allFrames_ap(gt_bboxes_dict, det_bboxes_dict, confidence=False, n=10, th
     return map
 
 
-def plot_frame(frame, gt_rects, det_rects, path_to_video, frame_iou=None):
+def plot_frame(frame, gt_rects, det_rects, path_to_video, frame_iou=None, save_frame = False, file_path = None):
     """
     Plots the frame and the ground truth bounding boxes.
     Args:
@@ -319,13 +321,13 @@ def plot_frame(frame, gt_rects, det_rects, path_to_video, frame_iou=None):
     - GT_rects: list of bounding box coordinates
     - path_to_video: path to the video file
     """
-    frame_str_num = frame[2:]
+    frame_str_num = frame
 
     # Read the video file
     cap = cv2.VideoCapture(path_to_video)
 
     # Set the frame number
-    cap.set(cv2.CAP_PROP_POS_FRAMES, int(frame[2:]))
+    cap.set(cv2.CAP_PROP_POS_FRAMES, int(frame))
 
     # Read the frame
     ret, frame = cap.read()
@@ -346,7 +348,56 @@ def plot_frame(frame, gt_rects, det_rects, path_to_video, frame_iou=None):
 
     if frame_iou is not None:
         plt.title(f"Frame {frame_str_num} IoU: {frame_iou:.3f}")
-    plt.show()
+    if not save_frame:
+        plt.show()
+    elif save_frame:
+        plt.savefig(file_path)
+        plt.close()
+
+def plot_iou_vs_frames(ious_list:List, file_path=None, save_fig=False) -> None:
+    """
+    Plots the graph of iou over the frames for a sequence.
+    Parameters
+    ----------
+    ious_list :
+
+    Returns
+    -------
+
+    """
+
+    #Plot the iou during the frames in a fixed single plot
+
+    frames = range(len(ious_list))
+    fig, ax = plt.subplots()
+    ax.plot(frames, ious_list, linewidth=0.5)
+    ax.set(xlim=(0, 2140), xticks=np.arange(0, 2140,250),
+           ylim=(0, 1), yticks=np.arange(0, 1, 0.1))
+    if not save_fig:
+        plt.show()
+    elif save_fig:
+        plt.savefig(file_path)
+        plt.close()
+
+def sort_dict(dict):
+    frames_num_str = list(dict.keys())
+    frames_int = sorted(int(frame[2:]) for frame in frames_num_str)
+    return {i: dict["f_"+str(i)] for i in frames_int}
+
+def make_gif(gt_bboxes_dict, det_bboxes_dict, cfg):
+    ious_list = []
+    ious_files_prefix = "gif_images/iou_vs_frames_plots"
+    detection_files_prefix = "gif_images/detection_plots"
+    if not os.path.exists("gif_images"):
+        os.mkdir("gif_images")
+        os.mkdir(ious_files_prefix)
+        os.mkdir(detection_files_prefix)
+    for frame in gt_bboxes_dict:
+        ious_filepath = os.path.join(ious_files_prefix, str(frame)+".png")
+        detection_filepath = os.path.join(detection_files_prefix, str(frame)+".png")
+        ious_list.append(get_frame_mean_IoU(gt_bboxes_dict[frame], det_bboxes_dict[frame]))
+        plot_frame(frame, gt_bboxes_dict[frame], det_bboxes_dict[frame], cfg["paths"]["video"], save_frame=True, file_path=detection_filepath)
+        plot_iou_vs_frames(ious_list, file_path=ious_filepath, save_fig=True )
 
 
 def addNoise(gt_bboxes, res = [1920, 1080], pos=False, max_pxdisplacement = 10, size=False, max_scale = 1., min_scale = 0.1, removebbox=False, ratio_removebbox = 0.2, addbbox = False, ratio_addbbox = 0.2):

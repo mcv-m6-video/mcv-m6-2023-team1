@@ -7,6 +7,7 @@ import csv
 from typing import List, Dict
 import os
 from matplotlib.animation import FuncAnimation
+import copy
 
 def extract_rectangles_from_csv(path, start_frame86=True):
     """
@@ -400,7 +401,7 @@ def make_gif(gt_bboxes_dict, det_bboxes_dict, cfg):
         plot_iou_vs_frames(ious_list, file_path=ious_filepath, save_fig=True )
 
 
-def addNoise(gt_bboxes, res = [1920, 1080], pos=False, max_pxdisplacement = 10, size=False, max_scale = 1., min_scale = 0.1, removebbox=False, ratio_removebbox = 0.2, addbbox = False, ratio_addbbox = 0.2):
+def addNoise(gt_bboxes, res = [1920, 1080], randm = True, pos=False, max_pxdisplacement = 10, size=False, max_scale = 1., min_scale = 0.1, removebbox=False, ratio_removebbox = 0.2, addbbox = False, ratio_addbbox = 0.2):
     """
     Adds noise to the ground truth bounding boxes changing their size, position and adding/removing them.
     Args:
@@ -416,13 +417,17 @@ def addNoise(gt_bboxes, res = [1920, 1080], pos=False, max_pxdisplacement = 10, 
     - addbox: bool that enables the generation of new bounding boxes in the gound truth - Default value: False
     - ratio_addbbox: float that defines the percentage of bounding boxes we want to add - Default value: 0.2 (20%) 
     """
-    noisy_gtbb = gt_bboxes
+    noisy_gtbb = copy.deepcopy(gt_bboxes)
 
     for bbox in noisy_gtbb:
         #bbox format = [left, top, right, bottom]
         if pos:
-            offset_x = random.randint(-max_pxdisplacement, max_pxdisplacement)
-            offset_y = random.randint(-max_pxdisplacement, max_pxdisplacement)
+            if randm:
+                offset_x = random.randint(-max_pxdisplacement, max_pxdisplacement)
+                offset_y = random.randint(-max_pxdisplacement, max_pxdisplacement)
+            else:
+                offset_x = max_pxdisplacement
+                offset_y = max_pxdisplacement
 
             if bbox[2]+offset_x < res[0] and bbox[0]+offset_x > 0:
                 bbox[0] += offset_x
@@ -435,10 +440,16 @@ def addNoise(gt_bboxes, res = [1920, 1080], pos=False, max_pxdisplacement = 10, 
             #find center of bbox
             center_x = ((bbox[2] - bbox[0]) / 2) + bbox[0]
             center_y = ((bbox[3] - bbox[1]) / 2) + bbox[1]
-
+            
             #scale bbox
-            scale_x = random.uniform(min_scale, max_scale)
-            scale_y = random.uniform(min_scale, max_scale)
+            scale_x = 0.
+            scale_y = 0.
+            if randm:
+                scale_x = random.uniform(min_scale, max_scale)
+                scale_y = random.uniform(min_scale, max_scale)
+            else:
+                scale_x = max_scale
+                scale_y = max_scale
 
             if ((bbox[2]-center_x) * scale_x + center_x) < res[0]:
                 bbox[0] = (bbox[0]-center_x) * scale_x + center_x

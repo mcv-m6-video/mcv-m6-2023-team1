@@ -7,16 +7,17 @@ paths:
 
 settings:
   plot_random_annotation: True
-  model: yolo
+  model: rcnn
 
 noise:
   res: [1920, 1080]
-  pos: False
-  max_pxdisplacement: 50
+  random: True
+  pos: True
+  max_pxdisplacement: [0, 10, 25, 50, 75, 100]
   size: True
-  max_scale: 10.0
+  max_scale: [0.125, 0.25, 0.5, 1., 2., 4.]
   min_scale: 1.0
-  removebbox: False
-  ratio_removebbox: 0.2
-  addbbox: False
-  ratio_addbbox: 0.7
+  removebbox: True
+  ratio_removebbox: [0., 0.2, 0.4, 0.6, 0.8, 0.9]
+  addbbox: True
+  ratio_addbbox: [0., 0.2, 0.4, 0.6, 0.8, 0.9]

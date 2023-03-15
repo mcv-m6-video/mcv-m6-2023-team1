@@ -318,7 +318,7 @@ def get_allFrames_ap(gt_bboxes_dict, det_bboxes_dict, confidence=False, n=10, th
     return map
 
 
-def plot_frame(frame, gt_rects, det_rects, path_to_video, frame_iou=None, save_frame = False, file_path = None):
+def plot_frame(frame, gt_rects, det_rects, path_to_video, frame_iou=None, save_frame = False, file_path = None, no_confidence= False):
     """
     Plots the frame and the ground truth bounding boxes.
     Args:
@@ -346,7 +346,11 @@ def plot_frame(frame, gt_rects, det_rects, path_to_video, frame_iou=None, save_f
         x1, y1, x2, y2 = rect
         plt.gca().add_patch(plt.Rectangle((x1, y1), x2 - x1, y2 - y1, fill=False, edgecolor='red', linewidth=3))
     for rect in det_rects:
-        x1, y1, x2, y2, conf = rect
+        if no_confidence:
+            x1, y1, x2, y2 = rect
+            conf = 1
+        else:
+            x1, y1, x2, y2, conf = rect
         # plot rectangle and confidence on top
         plt.gca().add_patch(plt.Rectangle((x1, y1), x2 - x1, y2 - y1, fill=False, edgecolor='green', linewidth=2))
         plt.gca().text(x1, y1, 'Conf: {:.3f}'.format(conf), bbox=dict(facecolor='green', alpha=0.5), fontsize=6)
@@ -397,12 +401,13 @@ def make_gif(gt_bboxes_dict, det_bboxes_dict, cfg):
         os.mkdir("gif_images")
         os.mkdir(ious_files_prefix)
         os.mkdir(detection_files_prefix)
-    for frame in gt_bboxes_dict:
-        ious_filepath = os.path.join(ious_files_prefix, str(frame)+".png")
-        detection_filepath = os.path.join(detection_files_prefix, str(frame)+".png")
+    for frame in list(gt_bboxes_dict.keys()):
         ious_list.append(get_frame_mean_IoU(gt_bboxes_dict[frame], det_bboxes_dict[frame]))
-        plot_frame(frame, gt_bboxes_dict[frame], det_bboxes_dict[frame], cfg["paths"]["video"], save_frame=True, file_path=detection_filepath)
-        plot_iou_vs_frames(ious_list, file_path=ious_filepath, save_fig=True )
+        if frame%5==0:
+            ious_filepath = os.path.join(ious_files_prefix, str(frame) + ".png")
+            detection_filepath = os.path.join(detection_files_prefix, str(frame) + ".png")
+            plot_frame(frame, gt_bboxes_dict[frame], det_bboxes_dict[frame], cfg["paths"]["video"], save_frame=True, file_path=detection_filepath, no_confidence=True)
+            plot_iou_vs_frames(ious_list, file_path=ious_filepath, save_fig=True )
 
 
 def addNoise(gt_bboxes, res = [1920, 1080], randm = True, pos=False, max_pxdisplacement = 10, size=False, max_scale = 1., min_scale = 0.1, removebbox=False, ratio_removebbox = 0.2, addbbox = False, ratio_addbbox = 0.2):
@@ -481,4 +486,21 @@ def addNoise(gt_bboxes, res = [1920, 1080], randm = True, pos=False, max_pxdispl
     
     return noisy_gtbb
 
+def addNoise_all_frames(dict):
+    noisy_gt = {}
+    for frame in dict:
+        noisy_gtbb = addNoise(dict[frame],
+                               res = [1920, 1080],
+                               randm = True,
+                               pos=True,
+                               max_pxdisplacement = 10,
+                               size=True,
+                               max_scale = 1.,
+                               min_scale = 0.1,
+                               removebbox=True,
+                               ratio_removebbox = 0.2,
+                               addbbox = True,
+                               ratio_addbbox = 0.2)
+        noisy_gt[frame] = noisy_gtbb
+    return noisy_gt
     

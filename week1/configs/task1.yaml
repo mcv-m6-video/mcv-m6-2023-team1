@@ -8,7 +8,7 @@ paths:
 settings:
   plot_random_annotation: True
   model: rcnn
-
+  save_all_frames_plots: False
 noise:
   res: [1920, 1080]
   random: True

@@ -11,8 +11,6 @@ def main(cfg: Dict):
 
     gt_rects_aicity_full = extract_rectangles_from_xml(cfg["paths"]["annotations"])
     det_rects_aicity_full = extract_rectangles_from_csv(cfg["paths"][cfg["settings"]["model"]])
-    gt_rects_aicity_full = dict(sorted(gt_rects_aicity_full.items()))
-    det_rects_aicity_full = dict(sorted(det_rects_aicity_full.items()))
 
     if cfg["settings"]["plot_random_annotation"]:
         # get a random frame labels from gt_rects_aicity_full
@@ -67,7 +65,15 @@ def main(cfg: Dict):
                                         th=0.5)
                 print("Percentage of bboxes added: ", ratio*100, "% IoU: ", frame_iou, " mAP: ", frame_map)
                 #plot_frame(frame, gt_bboxes, det_rects_aicity_full[frame], cfg["paths"]["video"], frame_iou)
-                  
+
+    noisy_gt_annotations = addNoise_all_frames(gt_rects_aicity_full)
+    mean_iou, iou_per_frame = get_mIoU(noisy_gt_annotations, gt_rects_aicity_full)
+    print("mIoU for all frames: ", mean_iou)
+    print("Plot iou vs frame")
+    plot_iou_vs_frames(iou_per_frame)
+
+    if cfg["settings"]["save_all_frames_plots"]:
+        make_gif(noisy_gt_annotations, gt_rects_aicity_full, cfg)
     print('end')
 
 

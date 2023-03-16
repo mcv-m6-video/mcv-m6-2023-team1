@@ -1,7 +1,10 @@
 import random
-from typing import List
+from typing import List, Tuple, Dict
 
+import cv2
 import numpy as np
+
+from src.background_estimation import BackgroundEstimator
 
 
 def get_IoU(bbox_a: List, bbox_b: List):
@@ -34,7 +37,6 @@ def get_IoU(bbox_a: List, bbox_b: List):
     iou = intersection_area / float(bbox_a_area + bbox_b_area - intersection_area)
 
     return iou
-
 
 
 def get_frame_mean_IoU(gt_bboxes, det_bboxes):
@@ -231,3 +233,18 @@ def get_allFrames_ap(gt_bboxes_dict, det_bboxes_dict, confidence=False, n=10, th
     map = np.mean(ap_list)
 
     return map
+
+
+def evaluate_background_estimator(data: List[Tuple[str, Dict]], bg_estimator: BackgroundEstimator, plot: bool = False):
+    """
+    Evaluates the background estimator on the given dataset.
+    :param data: List of image path and ground truth bounding boxes.
+    :param bg_estimator: Background estimator to evaluate.
+    :param plot: If True, plots the results.
+    """
+    for file_path, annotations in data:
+        image = cv2.imread(file_path)
+        raw_bg_estimation = bg_estimator.predict(image)
+        processed_bg_estimation = process_bg_estimation(raw_bg_estimation)
+        pred_bboxes = get_predicted_bboxes(processed_bg_estimation)
+

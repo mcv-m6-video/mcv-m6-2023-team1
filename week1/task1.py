@@ -2,7 +2,7 @@ import argparse
 import sys
 from typing import Dict
 
-from src.io import extract_rectangles_from_xml, extract_rectangles_from_csv
+from src.in_out import extract_rectangles_from_xml, extract_rectangles_from_csv
 from src.metrics import get_frame_mean_IoU, get_frame_ap, get_mIoU
 from src.plotting import plot_iou_vs_frames, make_gif
 import yaml

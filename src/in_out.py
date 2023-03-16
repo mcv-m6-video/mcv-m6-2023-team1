@@ -1,5 +1,10 @@
 import csv
+import os
 import xml.etree.ElementTree as elemTree
+from typing import List
+
+import cv2
+import numpy as np
 
 from src.utils import sort_dict
 
@@ -75,3 +80,52 @@ def extract_rectangles_from_xml(path_to_xml_file):
             frame_dict[frame_num].append([x1, y1, x2, y2])
 
     return sort_dict(frame_dict)
+
+
+def extract_frames_from_video(video_path: str, output_path: str) -> None:
+    """
+    Extract frames from a video and save them to a directory.
+    :param video_path: path to the video
+    :param output_path: path to the output directory
+    """
+    # Create the output directory if it doesn't exist
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+    else:
+        print(f"Output directory {output_path} already exists. Skipping extraction.")
+        return
+
+    video_capture = cv2.VideoCapture(video_path)     # Open the video file
+    frame_count = 0
+    while True:
+        ret, frame = video_capture.read()
+        if not ret:
+            break
+        output_frame_path = os.path.join(output_path, f"frame_{frame_count:04d}.jpg")
+        cv2.imwrite(output_frame_path, frame)
+        frame_count += 1
+    video_capture.release()
+
+
+def get_frames_paths_from_folder(input_path: str) -> np.ndarray:
+    """
+    Loads frames from a folder into a numpy array.
+    """
+    image_files = [os.path.join(input_path, f) for f in os.listdir(input_path) if
+                   os.path.isfile(os.path.join(input_path, f)) and f.endswith('.jpg')]
+    image_files.sort()
+    return np.array(image_files)
+
+
+def load_images(paths_to_images: List[str], grayscale: bool = True) -> np.ndarray:
+    """
+    Loads the images from the given paths into a numpy array.
+    :param paths_to_images: list of paths to the images
+    :param grayscale: 'rgb' or 'gray'
+    :return: numpy array of images
+    """
+    images = []
+    for path in paths_to_images:
+        images.append(cv2.imread(path, cv2.IMREAD_GRAYSCALE if grayscale else cv2.IMREAD_COLOR))
+    return np.array(images)
+

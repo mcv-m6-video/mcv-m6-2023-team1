@@ -1,9 +1,9 @@
 paths:
-  annotations: '../../dataset/ai_challenge_s03_c010-full_annotation.xml'
-  video: '../../dataset/AICity_data/train/S03/c010/vdo.avi'
-  rcnn: '../../dataset/AICity_data/train/S03/c010/det/det_mask_rcnn.txt'
-  ssd: '../../dataset/AICity_data/train/S03/c010/det/det_ssd512.txt'
-  yolo: '../../dataset/AICity_data/train/S03/c010/det/det_yolo3.txt'
+  annotations: '../dataset/ai_challenge_s03_c010-full_annotation.xml'
+  video: '../dataset/AICity_data/train/S03/c010/vdo.avi'
+  rcnn: '../dataset/AICity_data/train/S03/c010/det/det_mask_rcnn.txt'
+  ssd: '../dataset/AICity_data/train/S03/c010/det/det_ssd512.txt'
+  yolo: '../dataset/AICity_data/train/S03/c010/det/det_yolo3.txt'
 
 settings:
   plot_random_annotation: True

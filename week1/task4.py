@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 
 import yaml
-from week1.optical_flow import read_optical_flow, plot_flow, show_field, draw_opt_flow_magnitude_and_direction
+from src.optical_flow import read_optical_flow, plot_flow, show_field, draw_opt_flow_magnitude_and_direction
 
 
 def optical_flow_viz(config: Dict):

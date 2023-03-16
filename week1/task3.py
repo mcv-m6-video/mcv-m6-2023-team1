@@ -1,5 +1,5 @@
 import glob
-from optical_flow import *
+from src.optical_flow import *
 import cv2
 
 

@@ -1,7 +1,11 @@
 import argparse
+import random
 import sys
+from typing import Dict
 
-from src.utils import *
+from src.io import extract_rectangles_from_xml, extract_rectangles_from_csv
+from src.metrics import get_frame_mean_IoU, get_frame_ap, get_mIoU, get_allFrames_ap
+from src.plotting import plot_frame, plot_iou_vs_frames, make_gif
 import yaml
 
 

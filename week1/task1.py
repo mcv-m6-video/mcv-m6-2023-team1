@@ -1,8 +1,13 @@
 import argparse
 import sys
+from typing import Dict
 
-from src.utils import *
+from src.io import extract_rectangles_from_xml, extract_rectangles_from_csv
+from src.metrics import get_frame_mean_IoU, get_frame_ap, get_mIoU
+from src.plotting import plot_iou_vs_frames, make_gif
 import yaml
+
+from src.utils import addNoise, addNoise_all_frames
 
 
 def main(cfg: Dict):

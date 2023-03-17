@@ -10,7 +10,7 @@ from datetime import datetime
 from tqdm import tqdm
 
 
-def save_results(bbox_preds, preds, gt_labels, test_imgs_paths):
+def save_results(bbox_preds, preds, gt_test_bboxes, test_imgs_paths):
     """
     Save results from background substraction
 
@@ -20,10 +20,6 @@ def save_results(bbox_preds, preds, gt_labels, test_imgs_paths):
     :param test_imgs_paths:
     :return:
     """
-    gt_bboxes = [*gt_labels.values()]
-    first_test_idx = len(gt_labels) - len(bbox_preds)
-    gt_test_bboxes = gt_bboxes[first_test_idx:]
-
     # Save results in outputs
     now = datetime.now()
     date_string = now.strftime('%Y-%m-%d_%H-%M-%S')

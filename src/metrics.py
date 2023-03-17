@@ -74,6 +74,10 @@ def get_mIoU(gt_bboxes_dict, det_bboxes_dict):
     Returns:
     - The mIoU value between the two sets of bounding boxes.
     """
+    if isinstance(gt_bboxes_dict, list):
+        gt_bboxes_dict = {i: v for i, v in enumerate(gt_bboxes_dict)}
+    if isinstance(det_bboxes_dict, list):
+        det_bboxes_dict = {i: v for i, v in enumerate(det_bboxes_dict)}
 
     # Initialize a list to hold the IoU values for each frame
     iou_list = []
@@ -156,7 +160,8 @@ def get_frame_ap(gt_bboxes, det_bboxes, confidence=False, n=10, th=0.5):
     total_gt = len(gt_bboxes)
 
     # sort det_bboxes by confidence score in descending order
-    det_bboxes.sort(reverse=True, key=lambda x: x[4])
+    if confidence:
+        det_bboxes.sort(reverse=True, key=lambda x: x[4])
 
     # Calculate the IoU of each detected bbox.
     # frame_iou = [max([get_IoU_boxa_boxb(gt_bbox, det_bbox[:4]) for gt_bbox in gt_bboxes], default=0) for det_bbox in det_bboxes]
@@ -211,7 +216,10 @@ def get_allFrames_ap(gt_bboxes_dict, det_bboxes_dict, confidence=False, n=10, th
     Returns:
     - The mean of the AP in all the video frames.
     """
-
+    if isinstance(gt_bboxes_dict, list):
+        gt_bboxes_dict = {i: v for i, v in enumerate(gt_bboxes_dict)}
+    if isinstance(det_bboxes_dict, list):
+        det_bboxes_dict = {i: v for i, v in enumerate(det_bboxes_dict)}
     # Initialize a list to hold the IoU values for each frame
     ap_list = []
 

@@ -43,15 +43,19 @@ class SingleGaussianBackgroundEstimator(BackgroundEstimator):
         self.mu = None
         self.sigma = None
 
-    def fit(self, frames: np.ndarray):
+    def fit(self, frames: np.ndarray, mu="mean"):
         """
         Estimate the background using a single Gaussian model.
         Assuming batch of frames of shape (n_frames, height, width).
+        :param mu:
         :param frames: frames of the video
         :return: None
         """
         assert len(frames.shape) == 3, "The frames are not of shape (n_frames, height, width)"
-        self.mu = np.mean(frames, axis=0)
+        if mu == "mean":
+            self.mu = np.mean(frames, axis=0)
+        elif mu == "median":
+            self.mu = np.median(frames, axis=0)
         self.sigma = np.std(frames, axis=0)
 
     def predict(self, frame: np.ndarray, alpha: float = 1):

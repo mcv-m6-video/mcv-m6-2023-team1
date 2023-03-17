@@ -3,7 +3,7 @@ import sys
 from typing import Dict
 
 from src.background_estimation import get_background_estimator
-from src.in_out import extract_frames_from_video, get_frames_paths_from_folder, extract_rectangles_from_xml, load_images
+from src.in_out import extract_frames_from_video, get_frames_paths_from_folder, extract_rectangles_from_xml, load_images, extract_not_parked_rectangles_from_xml
 from src.utils import open_config_yaml
 from src.plotting import save_results
 from src.metrics import get_allFrames_ap, get_mIoU
@@ -18,7 +18,8 @@ def task1(cfg: Dict):
     estimator = get_background_estimator(bg_estimator_config)
 
     extract_frames_from_video(video_path=paths["video"], output_path=paths["extracted_frames"])
-    gt_labels = extract_rectangles_from_xml(cfg["paths"]["annotations"])
+    # gt_labels = extract_rectangles_from_xml(cfg["paths"]["annotations"])
+    gt_labels = extract_not_parked_rectangles_from_xml(cfg["paths"]["annotations"])
     frames = get_frames_paths_from_folder(input_path=paths["extracted_frames"])
     print("Number of frames: ", len(frames))
     dataset = [(key, frames[key])for key in gt_labels.keys()]
@@ -36,6 +37,7 @@ def task1(cfg: Dict):
     test_imgs_paths = [frame[1] for frame in test_data]
     print("Test images loaded ", len(test_imgs_paths))
 
+    # for alpha in [1, 3, 5, 7, 9, 11]:
     preds = estimator.batch_prediction(test_imgs_paths, alpha=3)
     print("Computed all predictions")
 

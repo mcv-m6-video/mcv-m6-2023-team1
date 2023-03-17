@@ -80,8 +80,8 @@ class SingleGaussianBackgroundEstimator(BackgroundEstimator):
         preds = []
         for frame in tqdm(frames):
             pred = self.predict(frame, alpha)
-            processed_pred = self.post_process(pred)
-            preds.append(processed_pred)
+            pred = self.post_process(pred)
+            preds.append(pred)
         return preds
 
     def plot_model(self):
@@ -110,10 +110,11 @@ class SingleGaussianBackgroundEstimator(BackgroundEstimator):
 
     @staticmethod
     def post_process(pred):
-        kernel = np.ones((5, 5), np.uint8)
         # Perform opening to remove small objects
+        kernel = np.ones((5, 5), np.uint8)
         opening = cv2.morphologyEx(pred, cv2.MORPH_OPEN, kernel)
         # Perform closing to connect big objects
+        kernel = np.ones((5, 5), np.uint8)
         closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
 
         return closing

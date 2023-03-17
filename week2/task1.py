@@ -41,6 +41,7 @@ def task1(cfg: Dict):
     test_imgs = load_images(test_imgs_paths, grayscale=True)
     print("Test images loaded ", len(test_imgs))
     preds = estimator.batch_prediction(test_imgs, alpha=3)
+    del test_imgs
     print("Computed all predictions")
     bboxes = estimator.get_bboxes(preds)
     print("Bounding boxes extracted")

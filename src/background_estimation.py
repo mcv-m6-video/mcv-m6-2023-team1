@@ -66,19 +66,20 @@ class SingleGaussianBackgroundEstimator(BackgroundEstimator):
         :return: background of the frames
         """
         assert len(frame.shape) == 2, "The frames are not of shape (height, width)"
-        pred = np.zeros(frame.shape)
-        pred[np.abs(frame - self.mu) >= alpha * (self.sigma + 2)] = 255
+        pred = np.zeros(frame.shape, dtype="uint8")
+        pred[np.abs(frame - self.mu) >= alpha * (self.sigma + 2)] = 1
         return pred
 
-    def batch_prediction(self, frames: np.ndarray, alpha: float = 1):
+    def batch_prediction(self, frames_path: np.ndarray, alpha: float = 1):
         """
         Predict the background of the frames.
-        :param frames: frames of the video
+        :param frames_path: frames paths of the video
         :param alpha: regularization term
         :return: background of the frames
         """
         preds = []
-        for frame in tqdm(frames):
+        for frame_path in tqdm(frames_path):
+            frame = cv2.imread(frame_path, cv2.IMREAD_GRAYSCALE)
             pred = self.predict(frame, alpha)
             pred = self.post_process(pred)
             preds.append(pred)
@@ -111,10 +112,10 @@ class SingleGaussianBackgroundEstimator(BackgroundEstimator):
     @staticmethod
     def post_process(pred):
         # Perform opening to remove small objects
-        kernel = np.ones((5, 5), np.uint8)
+        kernel = np.ones((11, 11), np.uint8)
         opening = cv2.morphologyEx(pred, cv2.MORPH_OPEN, kernel)
         # Perform closing to connect big objects
-        kernel = np.ones((5, 5), np.uint8)
+        kernel = np.ones((41, 41), np.uint8)
         closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
 
         return closing

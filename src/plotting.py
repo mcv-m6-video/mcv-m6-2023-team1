@@ -34,11 +34,11 @@ def save_results(bbox_preds, preds, gt_test_bboxes, test_imgs_paths):
         # Draw bounding boxes on the original image for visualization
         output_img = cv2.imread(test_img_path)
         for bbox in bbox_pred:
-            cv2.rectangle(output_img, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 0, 255), 2)
+            cv2.rectangle(output_img, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 255, 0), 2)
         for bbox in gt_test_bbox:
-            cv2.rectangle(output_img, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (0, 255, 0), 2)
+            cv2.rectangle(output_img, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (0, 0, 255), 2)
 
-        cv2.imwrite(f"{output_path}/masks/{str(i).zfill(4)}.png", pred)
+        cv2.imwrite(f"{output_path}/masks/{str(i).zfill(4)}.png", pred*255)
         cv2.imwrite(f"{output_path}/bboxes/{str(i).zfill(4)}.png", output_img)
 
 

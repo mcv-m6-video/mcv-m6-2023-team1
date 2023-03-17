@@ -32,17 +32,11 @@ def task1(cfg: Dict):
     del train_imgs
     estimator.plot_model()
 
+    # Background substraction
     test_imgs_paths = [frame[1] for frame in test_data]
-    # TODO: things to consider: loading all the test images at the same time is very expensive,
-    # as well as predicting everything in a single batch, but we only computed metrics that way, therefore, we need to
-    # change how we compute the metrics idk, im a bit braindead rn but we are almost there
-    # TODO: predictions lack the detection of bounding boxes, and the preprocessing of the connected components
-    # TODO: AH i just realized, we should not store the foreground prediction of the full image, we just store the
-    #  predicted bboxes, the image just for visualization purposes can be extracted with a estimator.predict(img)
-    test_imgs = load_images(test_imgs_paths, grayscale=True)
-    print("Test images loaded ", len(test_imgs))
-    preds = estimator.batch_prediction(test_imgs, alpha=3)
-    del test_imgs
+    print("Test images loaded ", len(test_imgs_paths))
+    preds = estimator.batch_prediction(test_imgs_paths, alpha=3)
+
     print("Computed all predictions")
     bboxes = estimator.get_bboxes(preds)
     print("Bounding boxes extracted")
@@ -52,8 +46,8 @@ def task1(cfg: Dict):
     gt_test_bboxes = gt_bboxes[first_test_idx:]
     # Save results and compute mAP and mIoU
     # save_results(bboxes, preds, gt_test_bboxes, test_imgs_paths)
-    mAP = get_allFrames_ap(bboxes, gt_test_bboxes)
-    mIoU = get_mIoU(bboxes, gt_test_bboxes)
+    mAP = get_allFrames_ap(gt_test_bboxes, bboxes)
+    mIoU = get_mIoU(gt_test_bboxes, bboxes)
     print(f"mAP: {mAP}")
     print(f"mIoU: {mIoU}")
 

@@ -35,17 +35,21 @@ def task1(cfg: Dict):
     # Background substraction
     test_imgs_paths = [frame[1] for frame in test_data]
     print("Test images loaded ", len(test_imgs_paths))
-    preds = estimator.batch_prediction(test_imgs_paths, alpha=3)
 
+    preds = estimator.batch_prediction(test_imgs_paths, alpha=3)
     print("Computed all predictions")
+
     bboxes = estimator.get_bboxes(preds)
     print("Bounding boxes extracted")
+
     # Get test images ground truth
     gt_bboxes = [*gt_labels.values()]
     first_test_idx = len(gt_labels) - len(bboxes)
     gt_test_bboxes = gt_bboxes[first_test_idx:]
-    # Save results and compute mAP and mIoU
+    # Save results
     # save_results(bboxes, preds, gt_test_bboxes, test_imgs_paths)
+
+    # Compute mAP and mIoU
     mAP = get_allFrames_ap(gt_test_bboxes, bboxes)
     mIoU = get_mIoU(gt_test_bboxes, bboxes)
     print(f"mAP: {mAP}")

@@ -5,6 +5,7 @@ from typing import Dict
 from src.background_estimation import get_background_estimator
 from src.in_out import extract_frames_from_video, get_frames_paths_from_folder, extract_rectangles_from_xml, load_images
 from src.utils import open_config_yaml
+from src.plotting import save_results
 
 
 def task1(cfg: Dict):
@@ -41,6 +42,9 @@ def task1(cfg: Dict):
     print("Test images loaded ", len(test_imgs))
     preds = estimator.batch_prediction(test_imgs, alpha=3)
     print("Computed all predictions")
+    bboxes = estimator.get_bboxes(preds)
+    print("Bounding boxes extracted")
+    save_results(bboxes, preds, gt_labels, test_imgs_paths)
 
 
 if __name__ == "__main__":

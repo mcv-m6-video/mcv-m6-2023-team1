@@ -19,5 +19,6 @@ def make_gif(frame_folder):
 
 
 if __name__ == "__main__":
+    # make_gif("../outputs/2023-03-17_12-43-18/bboxes")
     make_gif("gif_images/detection_plots")
     make_gif("gif_images/iou_vs_frames_plots")

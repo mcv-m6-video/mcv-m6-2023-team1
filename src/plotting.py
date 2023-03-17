@@ -6,6 +6,44 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from src.metrics import get_frame_mean_IoU
+from datetime import datetime
+from tqdm import tqdm
+
+
+def save_results(bbox_preds, preds, gt_labels, test_imgs_paths):
+    """
+    Save results from background substraction
+
+    :param bbox_preds:
+    :param preds:
+    :param gt_labels:
+    :param test_imgs_paths:
+    :return:
+    """
+    gt_bboxes = [*gt_labels.values()]
+    first_test_idx = len(gt_labels) - len(bbox_preds)
+    gt_test_bboxes = gt_bboxes[first_test_idx:]
+
+    # Save results in outputs
+    now = datetime.now()
+    date_string = now.strftime('%Y-%m-%d_%H-%M-%S')
+    output_path = "../outputs/"+date_string
+    os.makedirs("../outputs", exist_ok=True)  # create outputs directory in case is not present
+    os.mkdir(output_path)
+    os.mkdir(output_path + "/bboxes")
+    os.mkdir(output_path + "/masks")
+
+    print("Saving results")
+    for i, (gt_test_bbox, pred, bbox_pred, test_img_path) in tqdm(enumerate(zip(gt_test_bboxes, preds, bbox_preds, test_imgs_paths))):
+        # Draw bounding boxes on the original image for visualization
+        output_img = cv2.imread(test_img_path)
+        for bbox in bbox_pred:
+            cv2.rectangle(output_img, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 0, 255), 2)
+        for bbox in gt_test_bbox:
+            cv2.rectangle(output_img, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (0, 255, 0), 2)
+
+        cv2.imwrite(f"{output_path}/masks/{str(i).zfill(4)}.png", pred)
+        cv2.imwrite(f"{output_path}/bboxes/{str(i).zfill(4)}.png", output_img)
 
 
 def plot_frame(

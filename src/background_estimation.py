@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 from matplotlib import pyplot as plt
 from tqdm import tqdm
+import cv2
 
 
 def get_background_estimator(config: dict):
@@ -75,7 +76,8 @@ class SingleGaussianBackgroundEstimator(BackgroundEstimator):
         preds = []
         for frame in tqdm(frames):
             pred = self.predict(frame, alpha)
-            preds.append(pred)
+            processed_pred = self.post_process(pred)
+            preds.append(processed_pred)
         return preds
 
     def plot_model(self):
@@ -88,3 +90,26 @@ class SingleGaussianBackgroundEstimator(BackgroundEstimator):
         ax2.imshow(self.sigma, cmap='gray')
         ax2.set_title('Standard Deviation')
         plt.show()
+
+    @staticmethod
+    def get_bboxes(preds):
+        bbox_preds = []
+        for pred in tqdm(preds):
+            pred = pred.astype("uint8")
+            num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(pred)
+            bounding_boxes = []
+            for i in range(1, num_labels):
+                x, y, w, h, area = stats[i]
+                bounding_boxes.append((x, y, x + w, y + h))
+            bbox_preds.append(bounding_boxes)
+        return bbox_preds
+
+    @staticmethod
+    def post_process(pred):
+        kernel = np.ones((5, 5), np.uint8)
+        # Perform opening to remove small objects
+        opening = cv2.morphologyEx(pred, cv2.MORPH_OPEN, kernel)
+        # Perform closing to connect big objects
+        closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
+
+        return closing

@@ -38,10 +38,7 @@ def get_IoU(bbox_a: List, bbox_b: List):
 
     return iou
 
-
-def get_frame_mean_IoU(gt_bboxes, det_bboxes):
-    if len(gt_bboxes) == 0:
-        return None
+def get_frame_IoU(gt_bboxes, det_bboxes):
     used_gt_idxs = set()  # keep track of which ground truth boxes have already been used
     frame_iou = []
     for det_bbox in det_bboxes:
@@ -63,7 +60,12 @@ def get_frame_mean_IoU(gt_bboxes, det_bboxes):
     for i, gt_bbox in enumerate(gt_bboxes):
         if i not in used_gt_idxs:
             frame_iou.append(0)
-    return np.mean(frame_iou)
+    return frame_iou
+
+def get_frame_mean_IoU(gt_bboxes, det_bboxes):
+    if len(gt_bboxes) == 0:
+        return None
+    return np.mean(get_frame_IoU(gt_bboxes, det_bboxes))
 
 
 def get_mIoU(gt_bboxes_dict, det_bboxes_dict):
@@ -105,44 +107,50 @@ def get_mIoU(gt_bboxes_dict, det_bboxes_dict):
     return mIoU, iou_list
 
 
-def ap_voc(frame_iou, total_gt, th):
+def ap_voc(frame_iou, total_det, total_gt, th):
     """
     Computes the Average Precision (AP) in a frame according to Pascal Visual Object Classes (VOC) Challenge.
     Args:
-    - frame_iou: list with the IoU results of the detected bounding boxes
-    - total_gt: int defining the number of bounding boxes in the ground truth
+    - frame_iou: list with the IoU results of each ground truth bbox
+    - total_det: int defining the number of bounding boxes detected
     - th: float defining a threshold of IoU metric. If IoU is higher than th,
           then the detected bb is a TP, otherwise is a FP.
 
     Returns:
     - The AP value of the bb detected.
     """
-    total_det = len(frame_iou)
     # Define each detection if it is a true positive or a false positive
     tp = np.zeros(total_det)
     fp = np.zeros(total_det)
+    
     for i in range(total_det):
         if frame_iou[i] > th:
             tp[i] = 1
         else:
             fp[i] = 1
 
+
     # Tabulate the cumulative sum of the true and false positives
     tp = np.cumsum(tp)
     fp = np.cumsum(fp)
 
     # Compute Precision and Recall
-    precision = tp / (tp + fp)  # cumulative true positives / cumulative true positive + cumulative false positives
+    precision = tp / np.maximum((tp + fp),  np.finfo(np.float64).eps)  # cumulative true positives / cumulative true positive + cumulative false positives
     recall = tp / float(total_gt)  # cumulative true positives / total ground truths
 
+    if total_det < total_gt:
+        precision = np.append(precision, 0.0)
+        recall = np.append(recall, 1.0)
+    
     # AP measurement according to the equations 1 and 2 in page 11 of
     # https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.167.6629&rep=rep1&type=pdf
-    ap = 0.
-    for r in np.arange(0, 1.1, 0.1):
+    ap = 0.0
+    for r in np.arange(0.0, 1.1, 0.1):
         if any(recall >= r):
-            ap += np.max(precision[recall >= r])
+            max_precision = np.max(precision[recall >= r])
+            ap = ap + max_precision
 
-    ap = ap / 11
+    ap = ap / 11.0
     return ap
 
 
@@ -161,46 +169,32 @@ def get_frame_ap(gt_bboxes, det_bboxes, confidence=False, n=10, th=0.5):
     - The AP value of the bb detected in the frame.
     """
     if len(gt_bboxes) == 0:
-        return None
+        if len(det_bboxes) == 0:
+            return None
+        else:
+            return 0.00
 
     total_gt = len(gt_bboxes)
+    total_det = len(det_bboxes)
 
     # sort det_bboxes by confidence score in descending order
     if confidence:
         det_bboxes.sort(reverse=True, key=lambda x: x[4])
 
     # Calculate the IoU of each detected bbox.
-    # frame_iou = [max([get_IoU_boxa_boxb(gt_bbox, det_bbox[:4]) for gt_bbox in gt_bboxes], default=0) for det_bbox in det_bboxes]
-
-    # V2 taking into account that each GT box can only be assigned to one predicted box
-    frame_iou = [[get_IoU(gt_bbox, det_bbox[:4]) for gt_bbox in gt_bboxes] for det_bbox in det_bboxes]
-    idx_assigned = []
-    for i in range(len(frame_iou)):
-        bb_assigned = False
-        bb_num = 0  # To avoid an infinite while loop in case all the bboxes with IoU higher than 0 were assigned
-        while (not bb_assigned) and (bb_num != (total_gt - 1)):
-            idx_max = np.argmax(frame_iou[i])
-            if any(idx_max == idx_assigned):
-                frame_iou[i][idx_max] = 0
-                bb_num += 1
-            else:
-                frame_iou[i] = frame_iou[i][idx_max]
-                idx_assigned.append(idx_max)
-                bb_assigned = True
-        if not bb_assigned:
-            frame_iou[i] = 0.
-
+    frame_iou = get_frame_IoU(gt_bboxes, det_bboxes)[:total_det]
+    
     # Compute the AP
     ap = 0.
 
     if confidence:
-        ap = ap_voc(frame_iou, total_gt, th)
+        ap = ap_voc(frame_iou, total_det, total_gt, th)
     else:
         # Generate N random sorted lists of the detections and compute the AP in each one
         ap_list = []
         for i in range(n):
             random.shuffle(frame_iou)
-            ap_list.append(ap_voc(frame_iou, total_gt, th))
+            ap_list.append(ap_voc(frame_iou, total_det, total_gt, th))
 
         # Do the average of the computed APs
         ap = np.mean(ap_list)

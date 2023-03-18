@@ -1,0 +1,13 @@
+background_estimator:
+  estimator: MOG2
+
+visualization:
+  show_before: False
+  show_after: False
+  save: False
+
+paths:
+  annotations: '../dataset/ai_challenge_s03_c010-full_annotation.xml'
+  video: '../dataset/AICity_data/train/S03/c010/vdo.avi'
+  extracted_frames: '../dataset/w2_t1_frames'
+

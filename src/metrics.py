@@ -40,6 +40,8 @@ def get_IoU(bbox_a: List, bbox_b: List):
 
 
 def get_frame_mean_IoU(gt_bboxes, det_bboxes):
+    if len(gt_bboxes) == 0:
+        return 0.0
     used_gt_idxs = set()  # keep track of which ground truth boxes have already been used
     frame_iou = []
     for det_bbox in det_bboxes:
@@ -157,6 +159,9 @@ def get_frame_ap(gt_bboxes, det_bboxes, confidence=False, n=10, th=0.5):
     Returns:
     - The AP value of the bb detected in the frame.
     """
+    if len(gt_bboxes) == 0:
+        return 0.0
+
     total_gt = len(gt_bboxes)
 
     # sort det_bboxes by confidence score in descending order

@@ -9,7 +9,7 @@ from src.plotting import save_results
 from src.metrics import get_allFrames_ap, get_mIoU
 
 
-def task1(cfg: Dict):
+def task2(cfg: Dict):
     """
     For this task, you will implement a background estimation algorithm using a single Gaussian model.
     """
@@ -38,7 +38,7 @@ def task1(cfg: Dict):
     print("Test images loaded ", len(test_imgs_paths))
 
     # for alpha in [1, 3, 5, 7, 9, 11]:
-    preds = estimator.batch_prediction(test_imgs_paths, alpha=2.5)
+    preds = estimator.batch_prediction(test_imgs_paths, alpha=3, rho=0.3)
     print("Computed all predictions")
 
     bboxes = get_bboxes(preds)
@@ -59,11 +59,13 @@ def task1(cfg: Dict):
     save_results(bboxes, preds, gt_test_bboxes, test_imgs_paths)
 
 
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default="configs/task1.yaml")
+    parser.add_argument("--config", default="configs/task2.yaml")
     args = parser.parse_args(sys.argv[1:])
 
     config = open_config_yaml(args.config)
 
-    task1(config)
+    task2(config)

@@ -12,8 +12,34 @@ def get_background_estimator(config: dict):
     """
     if config["estimator"] == "single_gaussian":
         return SingleGaussianBackgroundEstimator()
+    elif config["estimator"] == "adaptive_single_gaussian":
+        return AdaptiveSingleGaussianBackgroundEstimator()
     else:
         raise ValueError(f"Unknown background estimator {config['estimator']}")
+
+
+def get_bboxes(preds):
+    bbox_preds = []
+    for pred in tqdm(preds):
+        pred = pred.astype("uint8")
+        num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(pred)
+        bounding_boxes = []
+        for i in range(1, num_labels):
+            x, y, w, h, area = stats[i]
+            bounding_boxes.append((x, y, x + w, y + h))
+        bbox_preds.append(bounding_boxes)
+    return bbox_preds
+
+
+def post_process(pred):
+    # Perform opening to remove small objects
+    kernel = np.ones((11, 11), np.uint8)
+    opening = cv2.morphologyEx(pred, cv2.MORPH_OPEN, kernel)
+    # Perform closing to connect big objects
+    kernel = np.ones((101, 101), np.uint8)
+    closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
+
+    return closing
 
 
 class BackgroundEstimator(ABC):
@@ -81,7 +107,7 @@ class SingleGaussianBackgroundEstimator(BackgroundEstimator):
         for frame_path in tqdm(frames_path):
             frame = cv2.imread(frame_path, cv2.IMREAD_GRAYSCALE)
             pred = self.predict(frame, alpha)
-            pred = self.post_process(pred)
+            pred = post_process(pred)
             preds.append(pred)
         return preds
 
@@ -96,26 +122,78 @@ class SingleGaussianBackgroundEstimator(BackgroundEstimator):
         ax2.set_title('Standard Deviation')
         plt.show()
 
-    @staticmethod
-    def get_bboxes(preds):
-        bbox_preds = []
-        for pred in tqdm(preds):
-            pred = pred.astype("uint8")
-            num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(pred)
-            bounding_boxes = []
-            for i in range(1, num_labels):
-                x, y, w, h, area = stats[i]
-                bounding_boxes.append((x, y, x + w, y + h))
-            bbox_preds.append(bounding_boxes)
-        return bbox_preds
 
-    @staticmethod
-    def post_process(pred):
-        # Perform opening to remove small objects
-        kernel = np.ones((11, 11), np.uint8)
-        opening = cv2.morphologyEx(pred, cv2.MORPH_OPEN, kernel)
-        # Perform closing to connect big objects
-        kernel = np.ones((41, 41), np.uint8)
-        closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
+class AdaptiveSingleGaussianBackgroundEstimator(BackgroundEstimator):
+    """
+    Background estimation using a single Gaussian model.
+    """
 
-        return closing
+    def __init__(self):
+        super().__init__()
+        self.mu = None
+        self.sigma = None
+
+    def fit(self, frames: np.ndarray, mu="mean"):
+        """
+        Estimate the background using a single Gaussian model.
+        Assuming batch of frames of shape (n_frames, height, width).
+        :param mu:
+        :param frames: frames of the video
+        :return: None
+        """
+        assert len(frames.shape) == 3, "The frames are not of shape (n_frames, height, width)"
+        if mu == "mean":
+            self.mu = np.mean(frames, axis=0)
+        elif mu == "median":
+            self.mu = np.median(frames, axis=0)
+        self.sigma = np.std(frames, axis=0)
+
+    def predict(self, frame: np.ndarray, alpha: float = 1, rho: float = 1):
+        """
+        Predict the background of the frames.
+        :param rho:
+        :param frame: frames of the video
+        :param alpha: regularization term
+        :return: background of the frames
+        """
+        assert len(frame.shape) == 2, "The frames are not of shape (height, width)"
+        pred = np.zeros(frame.shape, dtype="uint8")
+        pred[np.abs(frame - self.mu) >= alpha * (self.sigma + 2)] = 1
+
+        new_mu = rho * frame + (1 - rho) * self.mu
+        new_variance = rho * (frame - self.mu) ** 2 + (1 - rho) * self.sigma**2
+        new_sigma = np.sqrt(new_variance)
+
+        self.mu = np.where(pred == 0, new_mu, self.mu)
+        self.sigma = np.where(pred == 0, new_sigma, self.sigma)
+
+        return pred
+
+    def batch_prediction(self, frames_path: np.ndarray, alpha: float = 1, rho: float = 1):
+        """
+        Predict the background of the frames.
+        :param rho:
+        :param frames_path: frames paths of the video
+        :param alpha: regularization term
+        :return: background of the frames
+        """
+        preds = []
+        for frame_path in tqdm(frames_path):
+            frame = cv2.imread(frame_path, cv2.IMREAD_GRAYSCALE)
+            pred = self.predict(frame, alpha, rho)
+            pred = post_process(pred)
+            preds.append(pred)
+        return preds
+
+    def plot_model(self):
+        """
+        This function plot the mean and standard deviation, the current background model.
+        """
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
+        ax1.imshow(self.mu, cmap='gray')
+        ax1.set_title('Mean')
+        ax2.imshow(self.sigma, cmap='gray')
+        ax2.set_title('Standard Deviation')
+        plt.show()
+
+

@@ -41,7 +41,7 @@ def get_IoU(bbox_a: List, bbox_b: List):
 
 def get_frame_mean_IoU(gt_bboxes, det_bboxes):
     if len(gt_bboxes) == 0:
-        return 0.0
+        return None
     used_gt_idxs = set()  # keep track of which ground truth boxes have already been used
     frame_iou = []
     for det_bbox in det_bboxes:
@@ -70,8 +70,8 @@ def get_mIoU(gt_bboxes_dict, det_bboxes_dict):
     """
     Computes the mean Intersection over Union (mIoU) between two sets of bounding boxes.
     Args:
-    - gt_bboxes_dict: dictionary of ground truth bounding boxes
-    - det_bboxes_dict: dictionary of detected bounding boxes
+    - gt_bboxes_dict: dictionary or list of ground truth bounding boxes
+    - det_bboxes_dict: dictionary or list of detected bounding boxes
 
     Returns:
     - The mIoU value between the two sets of bounding boxes.
@@ -96,7 +96,8 @@ def get_mIoU(gt_bboxes_dict, det_bboxes_dict):
         frame_iou = get_frame_mean_IoU(gt_bboxes, det_bboxes)
 
         # Append the mean IoU value for the current frame to the list
-        iou_list.append(frame_iou)
+        if frame_iou is not None:
+            iou_list.append(frame_iou)
 
     # Compute the mean IoU value across all frames
     mIoU = np.mean(iou_list)
@@ -160,7 +161,7 @@ def get_frame_ap(gt_bboxes, det_bboxes, confidence=False, n=10, th=0.5):
     - The AP value of the bb detected in the frame.
     """
     if len(gt_bboxes) == 0:
-        return 0.0
+        return None
 
     total_gt = len(gt_bboxes)
 
@@ -240,7 +241,8 @@ def get_allFrames_ap(gt_bboxes_dict, det_bboxes_dict, confidence=False, n=10, th
         frame_ap = get_frame_ap(gt_bboxes, det_bboxes, confidence, n, th)
 
         # Append the mean mAP value for the current frame to the list
-        ap_list.append(frame_ap)
+        if frame_ap is not None:
+            ap_list.append(frame_ap)
 
     # Compute the mean mAP value across all frames
     map = np.mean(ap_list)

@@ -37,8 +37,9 @@ def task1(cfg: Dict):
     test_imgs_paths = [frame[1] for frame in test_data]
     print("Test images loaded ", len(test_imgs_paths))
 
-    # for alpha in [1, 3, 5, 7, 9, 11]:
-    preds = estimator.batch_prediction(test_imgs_paths, alpha=2.5)
+    alpha = 2.5
+    # for alpha in [1, 2.5, 4, 6.5, 8]:
+    preds = estimator.batch_prediction(test_imgs_paths, alpha=alpha)
     print("Computed all predictions")
 
     bboxes = get_bboxes(preds)

@@ -3,7 +3,8 @@ import sys
 from typing import Dict
 
 from src.background_estimation import get_background_estimator, get_bboxes
-from src.in_out import extract_frames_from_video, get_frames_paths_from_folder, extract_rectangles_from_xml, load_images, extract_not_parked_rectangles_from_xml
+from src.in_out import extract_frames_from_video, get_frames_paths_from_folder, extract_rectangles_from_xml, \
+    load_images, extract_not_parked_rectangles_from_xml
 from src.utils import open_config_yaml
 from src.plotting import save_results
 from src.metrics import get_allFrames_ap, get_mIoU
@@ -22,9 +23,9 @@ def task2(cfg: Dict):
     gt_labels = extract_not_parked_rectangles_from_xml(cfg["paths"]["annotations"])
     frames = get_frames_paths_from_folder(input_path=paths["extracted_frames"])
     print("Number of frames: ", len(frames))
-    dataset = [(key, frames[key])for key in gt_labels.keys()]
-    train_data = dataset[:int(len(dataset)*0.25)]
-    test_data = dataset[int(len(dataset)*0.25):]
+    dataset = [(key, frames[key]) for key in gt_labels.keys()]
+    train_data = dataset[:int(len(dataset) * 0.25)]
+    test_data = dataset[int(len(dataset) * 0.25):]
 
     train_imgs_paths = [frame[1] for frame in train_data]
     train_imgs = load_images(train_imgs_paths, grayscale=True)
@@ -37,8 +38,12 @@ def task2(cfg: Dict):
     test_imgs_paths = [frame[1] for frame in test_data]
     print("Test images loaded ", len(test_imgs_paths))
 
-    # for alpha in [1, 3, 5, 7, 9, 11]:
-    preds = estimator.batch_prediction(test_imgs_paths, alpha=3, rho=0.3)
+    alpha = 2.5
+    rho = 0.01
+    # small rho values tend to work way better
+    # for alpha in [1, 2.5, 4, 6.5, 8]:
+    # for rho in [0.01, 0.05, 0.1, 0.2]:
+    preds = estimator.batch_prediction(test_imgs_paths, alpha=alpha, rho=rho)
     print("Computed all predictions")
 
     bboxes = get_bboxes(preds)
@@ -57,8 +62,6 @@ def task2(cfg: Dict):
 
     # Save results
     save_results(bboxes, preds, gt_test_bboxes, test_imgs_paths)
-
-
 
 
 if __name__ == "__main__":

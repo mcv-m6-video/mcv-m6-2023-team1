@@ -33,13 +33,23 @@ def get_bboxes(preds):
 
 def post_process(pred):
     # Perform opening to remove small objects
-    kernel = np.ones((11, 11), np.uint8)
-    opening = cv2.morphologyEx(pred, cv2.MORPH_OPEN, kernel)
-    # Perform closing to connect big objects
-    kernel = np.ones((101, 101), np.uint8)
-    closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
+    kernel = np.ones((5, 5), np.uint8)
+    x = cv2.morphologyEx(pred, cv2.MORPH_OPEN, kernel)
 
-    return closing
+    # Perform closing to connect big objects
+    kernel = np.ones((2, 80), np.uint8)
+    x = cv2.morphologyEx(x, cv2.MORPH_CLOSE, kernel)
+
+    kernel = np.ones((80, 2), np.uint8)
+    x = cv2.morphologyEx(x, cv2.MORPH_CLOSE, kernel)
+
+    kernel = np.ones((2, 80), np.uint8)
+    x = cv2.morphologyEx(x, cv2.MORPH_CLOSE, kernel)
+
+    kernel = np.ones((10, 10), np.uint8)
+    x = cv2.morphologyEx(x, cv2.MORPH_OPEN, kernel)
+
+    return x
 
 
 class BackgroundEstimator(ABC):

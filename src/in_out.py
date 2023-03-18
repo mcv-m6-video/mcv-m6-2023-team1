@@ -133,8 +133,8 @@ def extract_frames_from_video(video_path: str, output_path: str) -> None:
     # Create the output directory if it doesn't exist
     if not os.path.exists(output_path):
         os.makedirs(output_path)
-    else:
-        print(f"Output directory {output_path} already exists. Skipping extraction.")
+    elif len(os.path.listdir(output_path))>0:
+        print(f"Output directory {output_path} already exists and has content. Skipping extraction.")
         return
 
     video_capture = cv2.VideoCapture(video_path)     # Open the video file

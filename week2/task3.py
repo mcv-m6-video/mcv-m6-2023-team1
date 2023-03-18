@@ -26,9 +26,21 @@ def task3(cfg: Dict):
     print("Number of frames: ", len(frames))
     dataset = [(key, frames[key])for key in gt_labels.keys()]
 
+
     if bg_estimator_config["estimator"] == "MOG2":
-        # use MOG2 opoenCV
         estimator = cv2.createBackgroundSubtractorMOG2()
+    elif bg_estimator_config["estimator"] == "KNN":
+        estimator = cv2.createBackgroundSubtractorKNN()
+    #pip install opencv-contrib-python
+    elif bg_estimator_config["estimator"] == "LSBP":
+        estimator = cv2.bgsegm.createBackgroundSubtractorLSBP()
+    elif bg_estimator_config["estimator"] == "GSOC":
+        estimator = cv2.bgsegm.createBackgroundSubtractorGSOC()
+    elif bg_estimator_config["estimator"] == "CNT":
+        estimator = cv2.bgsegm.createBackgroundSubtractorCNT()
+
+    #keep only dataset of test video to compare with task1
+    dataset = dataset[int(len(dataset)*0.25):]
 
     preds = []
     bbox_preds = []
@@ -67,11 +79,11 @@ def task3(cfg: Dict):
                 cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
                 bounding_boxes.append((x, y, x + w, y + h))
 
-        # cv2.imshow('frame', mask)
-        # cv2.imshow('frame2', img)
-        # k = cv2.waitKey(30) & 0xff
-        # if k == 27:
-        #     break
+        cv2.imshow('frame', mask)
+        cv2.imshow('frame2', img)
+        k = cv2.waitKey(30) & 0xff
+        if k == 27:
+            break
 
         #save all the images to preds list
         preds.append(mask)

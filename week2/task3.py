@@ -49,6 +49,12 @@ def task3(cfg: Dict):
         img = cv2.imread(frame[1])
         fgmask = estimator.apply(img)
 
+        if cfg["visualization"]["show_before"]:
+            cv2.imshow('frame', fgmask)
+            cv2.imshow('frame2', img)
+            k = cv2.waitKey(30) & 0xff
+            if k == 27:
+                break
         # threshold the foreground mask to get a binary image
         thresh = cv2.threshold(fgmask, 128, 255, cv2.THRESH_BINARY)[1]
 
@@ -79,11 +85,12 @@ def task3(cfg: Dict):
                 cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
                 bounding_boxes.append((x, y, x + w, y + h))
 
-        cv2.imshow('frame', mask)
-        cv2.imshow('frame2', img)
-        k = cv2.waitKey(30) & 0xff
-        if k == 27:
-            break
+        if cfg["visualization"]["show_after"]:
+            cv2.imshow('frame', mask)
+            cv2.imshow('frame2', img)
+            k = cv2.waitKey(30) & 0xff
+            if k == 27:
+                break
 
         #save all the images to preds list
         preds.append(mask)
@@ -100,7 +107,8 @@ def task3(cfg: Dict):
     #Save results
     gt_labels_list = [*gt_labels.values()]
     dataset_files = [frame[1] for frame in dataset]
-    save_results(bbox_preds, preds, gt_labels_list, dataset_files, multiply255=False)
+    if cfg["visualization"]["save"]:
+        save_results(bbox_preds, preds, gt_labels_list, dataset_files, multiply255=False)
 
 
 

@@ -57,7 +57,7 @@ def task1(cfg: Dict):
     print(f"mIoU: {mIoU}")
 
     # Save results
-    save_results(bboxes, preds, gt_test_bboxes, test_imgs_paths)
+    # save_results(bboxes, preds, gt_test_bboxes, test_imgs_paths)
 
 
 if __name__ == "__main__":

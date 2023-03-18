@@ -133,11 +133,11 @@ def extract_frames_from_video(video_path: str, output_path: str) -> None:
     # Create the output directory if it doesn't exist
     if not os.path.exists(output_path):
         os.makedirs(output_path)
-    else:
-        print(f"Output directory {output_path} already exists. Skipping extraction.")
+    elif len(os.listdir(output_path)) > 0:
+        print(f"Output directory {output_path} already exists and has content. Skipping extraction.")
         return
 
-    video_capture = cv2.VideoCapture(video_path)     # Open the video file
+    video_capture = cv2.VideoCapture(video_path)  # Open the video file
     frame_count = 0
     while True:
         ret, frame = video_capture.read()
@@ -170,4 +170,3 @@ def load_images(paths_to_images: List[str], grayscale: bool = True) -> np.ndarra
     for path in paths_to_images:
         images.append(cv2.imread(path, cv2.IMREAD_GRAYSCALE if grayscale else cv2.IMREAD_COLOR))
     return np.array(images)
-

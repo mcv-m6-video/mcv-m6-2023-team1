@@ -4,7 +4,7 @@ background_estimator:
 visualization:
   show_before: False
   show_after: False
-  save: True
+  save: False
 
 paths:
   annotations: '../dataset/ai_challenge_s03_c010-full_annotation.xml'

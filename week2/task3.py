@@ -43,7 +43,7 @@ def task3(cfg: Dict):
     dataset = dataset[int(len(dataset)*0.25):]
 
     preds = []
-    bbox_preds = []
+    bboxes = []
     for i, frame in tqdm(enumerate(dataset)):
 
         img = cv2.imread(frame[1])
@@ -94,21 +94,24 @@ def task3(cfg: Dict):
 
         #save all the images to preds list
         preds.append(mask)
-        bbox_preds.append(bounding_boxes)
+        bboxes.append(bounding_boxes)
 
 
+    gt_bboxes = [*gt_labels.values()]
+    first_test_idx = len(gt_labels) - len(bboxes)
+    gt_test_bboxes = gt_bboxes[first_test_idx:]
 
     # Compute mAP and mIoU
-    # mAP = get_allFrames_ap(gt_labels, bbox_preds)
-    # mIoU = get_mIoU(gt_labels, bbox_preds)
-    # print(f"mAP: {mAP}")
-    # print(f"mIoU: {mIoU}")
+    mAP = get_allFrames_ap(gt_test_bboxes, bboxes)
+    mIoU = get_mIoU(gt_test_bboxes, bboxes)
+    print(f"mAP: {mAP}")
+    print(f"mIoU: {mIoU}")
 
     #Save results
-    gt_labels_list = [*gt_labels.values()]
+
     dataset_files = [frame[1] for frame in dataset]
     if cfg["visualization"]["save"]:
-        save_results(bbox_preds, preds, gt_labels_list, dataset_files, multiply255=False)
+        save_results(bboxes, preds, gt_test_bboxes, dataset_files, multiply255=False)
 
 
 

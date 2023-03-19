@@ -10,7 +10,7 @@ from datetime import datetime
 from tqdm import tqdm
 
 
-def save_results(bbox_preds, preds, gt_test_bboxes, test_imgs_paths, multiply255 = True):
+def save_results(bbox_preds, preds, gt_test_bboxes, test_imgs_paths, multiply255 = True, take_one_sample=False):
     """
     Save results from background substraction
 
@@ -43,7 +43,8 @@ def save_results(bbox_preds, preds, gt_test_bboxes, test_imgs_paths, multiply255
             pred = pred*255
         cv2.imwrite(f"{output_path}/masks/{str(i).zfill(4)}.png", pred)
         cv2.imwrite(f"{output_path}/bboxes/{str(i).zfill(4)}.png", output_img)
-
+        if take_one_sample:
+           break
 
 def plot_frame(
         frame: str,

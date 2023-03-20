@@ -10,7 +10,8 @@ from datetime import datetime
 from tqdm import tqdm
 
 
-def save_results(bbox_preds, preds, gt_test_bboxes, test_imgs_paths, multiply255 = True):
+def save_results(bbox_preds, preds, gt_test_bboxes, test_imgs_paths, multiply255 = True,
+                 save_just_image=False, save_GTmask=False):
     """
     Save results from background substraction
 
@@ -28,16 +29,24 @@ def save_results(bbox_preds, preds, gt_test_bboxes, test_imgs_paths, multiply255
     os.mkdir(output_path)
     os.mkdir(output_path + "/bboxes")
     os.mkdir(output_path + "/masks")
+    os.mkdir(output_path + "/gt_masks")
 
     print("Saving results")
     for i, (gt_test_bbox, pred, bbox_pred, test_img_path) in tqdm(enumerate(zip(gt_test_bboxes, preds, bbox_preds, test_imgs_paths))):
         # Draw bounding boxes on the original image for visualization
         output_img = cv2.imread(test_img_path)
-        for bbox in bbox_pred:
-            cv2.rectangle(output_img, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 255, 0), 2)
-        for bbox in gt_test_bbox:
-            cv2.rectangle(output_img, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (0, 0, 255), 2)
-
+        if not save_just_image:
+            for bbox in bbox_pred:
+                cv2.rectangle(output_img, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 255, 0), 2)
+            for bbox in gt_test_bbox:
+                cv2.rectangle(output_img, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (0, 0, 255), 2)
+        if save_GTmask:
+            #create a mask with black pixels in bg, and white pixels in the places where there is a car
+            gt_mask = np.zeros((output_img.shape[0], output_img.shape[1]))
+            for bbox in gt_test_bbox:
+                gt_mask[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2])] = 255
+            #save gt mask
+            cv2.imwrite(f"{output_path}/gt_masks/{str(i).zfill(4)}.png", gt_mask)
         #multiply by 255 to save as png if multiply255 is True
         if multiply255:
             pred = pred*255

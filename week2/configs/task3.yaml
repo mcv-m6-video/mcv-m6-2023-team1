@@ -1,5 +1,5 @@
 background_estimator:
-  estimator: MOG2
+  estimator: KNN
 
 visualization:
   show_before: False

@@ -168,32 +168,38 @@ def get_frame_ap(gt_bboxes, det_bboxes, confidence=False, n=10, th=0.5):
     Returns:
     - The AP value of the bb detected in the frame.
     """
-    if len(gt_bboxes) == 0:
-        if len(det_bboxes) == 0:
+    total_gt = len(gt_bboxes) # Number of bboxes in the ground truth
+    total_det = len(det_bboxes) # Number of bboxes in the predictions
+
+    if total_gt == 0:
+        # if we don't have any ground truth in the frame and also we don't have any prediction, we assume it's corret and we skip the frame 
+        if total_det == 0:
             return None
+        # if we don't have any ground truth in the frame but we have predictions, we assume they are false positives and therefore the mAP is equal to 0
         else:
-            return 0.00
-
-    total_gt = len(gt_bboxes)
-    total_det = len(det_bboxes)
-
-    # sort det_bboxes by confidence score in descending order
+            return 0.
+    
+    ap = 0.
     if confidence:
+        # sort det_bboxes by confidence score in descending order
         det_bboxes.sort(reverse=True, key=lambda x: x[4])
 
-    # Calculate the IoU of each detected bbox.
-    frame_iou = get_frame_IoU(gt_bboxes, det_bboxes)[:total_det]
-    
-    # Compute the AP
-    ap = 0.
+        # Calculate the IoU of each detected bbox.
+        frame_iou = get_frame_IoU(gt_bboxes, det_bboxes)[:total_det]
 
-    if confidence:
+        #  Compute the AP
         ap = ap_voc(frame_iou, total_det, total_gt, th)
     else:
         # Generate N random sorted lists of the detections and compute the AP in each one
         ap_list = []
         for i in range(n):
-            random.shuffle(frame_iou)
+            # sort randomly the det_bboxes
+            random.shuffle(det_bboxes)
+
+            # Calculate the IoU of each detected bbox.
+            frame_iou = get_frame_IoU(gt_bboxes, det_bboxes)[:total_det]
+
+            #  Compute the AP
             ap_list.append(ap_voc(frame_iou, total_det, total_gt, th))
 
         # Do the average of the computed APs

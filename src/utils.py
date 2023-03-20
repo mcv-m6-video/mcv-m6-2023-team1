@@ -1,9 +1,33 @@
 import copy
 import random
 from typing import Dict
-
+import cv2
+import tqdm
 import yaml
+import numpy as np
 
+ColorSpaceConverterMethod = {"RGB": cv2.COLOR_BGR2RGB,
+                                      "HSV": cv2.COLOR_BGR2HSV,
+                                      "YUV": cv2.COLOR_BGR2YUV,
+                                      "XYZ": cv2.COLOR_BGR2XYZ}
+
+ChannelsUsedFromColorSpace = {"RGB": [0,1,2],
+                              "HSV": [0,1,2],
+                              "YUV": [1,2],
+                              "XYZ":[0,2]}
+
+
+def transform_color_space(frames: np.ndarray, color_space:str) -> np.ndarray:
+    """
+    Loads the images from the given paths into a numpy array.
+    :param paths_to_images: list of paths to the images
+    :param grayscale: 'rgb' or 'gray'
+    :return: numpy array of images
+    """
+    images = []
+    for frame in tqdm.tqdm(frames, desc="Images being preprocessed"):
+        images.append(cv2.cvtColor(frame, ColorSpaceConverterMethod[color_space]))
+    return np.array(images)
 
 def sort_dict(dictionary: Dict):
     """

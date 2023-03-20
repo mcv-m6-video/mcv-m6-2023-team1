@@ -2,10 +2,10 @@ import csv
 import os
 import xml.etree.ElementTree as elemTree
 from typing import List
-
+import matplotlib.pyplot as plt
 import cv2
 import numpy as np
-
+from tqdm import tqdm
 from src.utils import sort_dict
 
 
@@ -167,6 +167,17 @@ def load_images(paths_to_images: List[str], grayscale: bool = True) -> np.ndarra
     :return: numpy array of images
     """
     images = []
-    for path in paths_to_images:
+    for path in tqdm(paths_to_images):
         images.append(cv2.imread(path, cv2.IMREAD_GRAYSCALE if grayscale else cv2.IMREAD_COLOR))
     return np.array(images)
+def plot_3d_scatter(map_values, alpha_values, rho_values):
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+
+    ax.scatter(alpha_values,rho_values, map_values)
+
+    ax.set_xlabel('Alpha')
+    ax.set_ylabel('Rho')
+    ax.set_zlabel('mAP')
+
+    plt.show()

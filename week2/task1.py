@@ -37,7 +37,7 @@ def task1(cfg: Dict):
     test_imgs_paths = [frame[1] for frame in test_data]
     print("Test images loaded ", len(test_imgs_paths))
 
-    alpha = 2.5
+    alpha = cfg["background_estimator"]["alpha"]
     # for alpha in [1, 2.5, 4, 6.5, 8]:
     preds = estimator.batch_prediction(test_imgs_paths, alpha=alpha)
     print("Computed all predictions")

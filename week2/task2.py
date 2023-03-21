@@ -38,8 +38,8 @@ def task2(cfg: Dict):
     test_imgs_paths = [frame[1] for frame in test_data]
     print("Test images loaded ", len(test_imgs_paths))
 
-    alpha = 2.5
-    rho = 0.01
+    alpha = cfg["background_estimator"]["alpha"]
+    rho = cfg["background_estimator"]["rho"]
     # small rho values tend to work way better
     # for alpha in [1, 2.5, 4, 6.5, 8]:
     # for rho in [0.01, 0.05, 0.1, 0.2]:

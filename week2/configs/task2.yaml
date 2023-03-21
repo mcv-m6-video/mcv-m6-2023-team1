@@ -1,5 +1,7 @@
 background_estimator:
   estimator: adaptive_single_gaussian
+  alpha: 2.5
+  rho: 0.01
 
 paths:
   annotations: '../dataset/ai_challenge_s03_c010-full_annotation.xml'

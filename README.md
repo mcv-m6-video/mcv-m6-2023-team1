@@ -35,4 +35,14 @@ For example in order to run task 1 from the /week2 folder run :
 ```
 python task1.py 
 ```
+The config files for the task 1 and 2, have the following parameters that can be adjusted:
+- estimator: "single_gaussian" or "adaptive_single_gaussian"
+- alpha: float number
+- rho: float number
 
+In the task 3 config file can be adjusted only the "estimator" parameter, that can be: "MOG2", "KNN", "LSBP", "GSOC", or "CNT". The finality of this task is to evaluate each single gaussian background substractor method, without training it.
+
+Finally, in the task 4 config file can be fine tuned the following parameters:
+- estimator: "single_gaussian", "adaptive_single_gaussian", or "multi_gaussian"
+- method: "adaptative" or "non-adaptative"
+- color_space: "RGB", "HSV", "YUV", "XYZ"

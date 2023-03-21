@@ -23,3 +23,16 @@ For example in order to run task 1 from the /week1 folder run :
 ```
 python task1.py 
 ```
+
+## Week 2
+- [Source Code](https://github.com/mcv-m6-video/mcv-m6-2023-team1/tree/main/week2)
+- [Presentation](https://docs.google.com/presentation/d/1Vzk87VFi-S48UVvC9IeGrX8msQPG8p626TiSDeO3Lig/edit?usp=sharing)
+
+In order to generate the results from the different task one can simply run the corresponding scripts of the task.
+Take into account that some script have configs where you can decide on some options. The config files can be found in /week2/configs/taskx.yaml, 
+where "x" is the task number.
+For example in order to run task 1 from the /week2 folder run :
+```
+python task1.py 
+```
+

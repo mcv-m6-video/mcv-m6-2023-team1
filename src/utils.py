@@ -15,6 +15,91 @@ ChannelsUsedFromColorSpace = {"RGB": [0,1,2],
                               "HSV": [0,1,2],
                               "YUV": [1,2],
                               "XYZ":[0,2]}
+def get_coco_name_from_id(num):
+    id_to_name = {
+        0: 'person',
+        1: 'bicycle',
+        2: 'car',
+        3: 'motorcycle',
+        4: 'airplane',
+        5: 'bus',
+        6: 'train',
+        7: 'truck',
+        8: 'boat',
+        9: 'traffic light',
+        10: 'fire hydrant',
+        11: 'stop sign',
+        12: 'parking meter',
+        13: 'bench',
+        14: 'bird',
+        15: 'cat',
+        16: 'dog',
+        17: 'horse',
+        18: 'sheep',
+        19: 'cow',
+        20: 'elephant',
+        21: 'bear',
+        22: 'zebra',
+        23: 'giraffe',
+        24: 'backpack',
+        25: 'umbrella',
+        26: 'handbag',
+        27: 'tie',
+        28: 'suitcase',
+        29: 'frisbee',
+        30: 'skis',
+        31: 'snowboard',
+        32: 'sports ball',
+        33: 'kite',
+        34: 'baseball bat',
+        35: 'baseball glove',
+        36: 'skateboard',
+        37: 'surfboard',
+        38: 'tennis racket',
+        39: 'bottle',
+        40: 'wine glass',
+        41: 'cup',
+        42: 'fork',
+        43: 'knife',
+        44: 'spoon',
+        45: 'bowl',
+        46: 'banana',
+        47: 'apple',
+        48: 'sandwich',
+        49: 'orange',
+        50: 'broccoli',
+        51: 'carrot',
+        52: 'hot dog',
+        53: 'pizza',
+        54: 'donut',
+        55: 'cake',
+        56: 'chair',
+        57: 'couch',
+        58: 'potted plant',
+        59: 'bed',
+        60: 'dining table',
+        61: 'toilet',
+        62: 'tv',
+        63: 'laptop',
+        64: 'mouse',
+        65: 'remote',
+        66: 'keyboard',
+        67: 'cell phone',
+        68: 'microwave',
+        69: 'oven',
+        70: 'toaster',
+        71: 'sink',
+        72: 'refrigerator',
+        73: 'book',
+        74: 'clock',
+        75: 'vase',
+        76: 'scissors',
+        77: 'teddy bear',
+        78: 'hair drier',
+        79: 'toothbrush'
+    }
+
+    return id_to_name[num]
 
 def results_yolov5_to_bbox(results, classes=["car"], min_conf=0.25):
     """
@@ -33,6 +118,29 @@ def results_yolov5_to_bbox(results, classes=["car"], min_conf=0.25):
             if res[4] > min_conf:
                 bboxes.append([int(res[0]), int(res[1]), int(res[2]), int(res[3])])
     return bboxes, resultsyolo
+
+def results_yolov8_to_bbox(results, classes=["car"], min_conf=0.25):
+    """
+    Converts the results of the yolov8 model to a list of bounding boxes.
+    :param results: results of the yolov8 model
+    :param classes: classes to consider
+    :param min_conf: minimum confidence to consider a detection
+    :return: list of bounding boxes - top left bottom right
+    """
+    bboxes = []
+    bboxes_frame = results[0].boxes.cpu().numpy()
+    for res in bboxes_frame:
+        if str(get_coco_name_from_id(res.cls[-1])) in classes:
+            if float(res.conf[-1]) > min_conf:
+                bboxes.append([int(res.boxes[0][0]), int(res.boxes[0][1]), int(res.boxes[0][2]), int(res.boxes[0][3])])
+
+    #create yolov8_np_results, wich has to be an array for each bbox, with top left right bottom coordinates, confidence, class id and class name
+    yolov8_np_results = []
+    for res in bboxes_frame:
+        if str(get_coco_name_from_id(res.cls[-1])) in classes:
+            if float(res.conf[-1]) > min_conf:
+                yolov8_np_results.append([int(res.boxes[0][0]), int(res.boxes[0][1]), int(res.boxes[0][2]), int(res.boxes[0][3]), float(res.conf[-1]), int(res.cls[-1]), str(get_coco_name_from_id(res.cls[-1]))])
+    return bboxes, np.array(yolov8_np_results)
 
 
 def draw_img_with_yoloresults(img, results, classes=["car"], gt_bboxes=None, show_gt=False):

@@ -2,6 +2,7 @@ wandb/*
 outputs/*
 dataset/*
 models/*
+*.pt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

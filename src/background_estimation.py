@@ -133,6 +133,8 @@ class SingleGaussianBackgroundEstimator(BackgroundEstimator):
         ax1.set_title('Mean')
         ax2.imshow(self.sigma, cmap='gray')
         ax2.set_title('Standard Deviation')
+        plot = ax2.pcolor(self.sigma)
+        fig.colorbar(plot)
         plt.show()
 
 

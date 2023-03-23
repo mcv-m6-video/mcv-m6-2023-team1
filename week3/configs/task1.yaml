@@ -1,8 +1,12 @@
-
+model: yolov5
 visualization:
-  show_before: False
-  show_after: False
+  show_detection: False
   save: False
+bboxes:
+  save: True
+  path: '../dataset/'
+  name: 'yolov5_bboxes'
+
 
 paths:
   annotations: '../dataset/ai_challenge_s03_c010-full_annotation.xml'

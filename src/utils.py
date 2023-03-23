@@ -16,6 +16,68 @@ ChannelsUsedFromColorSpace = {"RGB": [0,1,2],
                               "YUV": [1,2],
                               "XYZ":[0,2]}
 
+def results_yolov5_to_bbox(results, classes=["car"]):
+    """
+    Converts the results of the yolov5 model to a list of bounding boxes.
+    :param results: results of the yolov5 model
+    :param classes: classes to consider
+    :return: list of bounding boxes - top left bottom right
+    """
+    resultsyolo = results.pandas().xyxy[0]
+    resultsyolo = resultsyolo.to_numpy()
+
+    bboxes = []
+    for res in resultsyolo:
+        if str(res[-1]) in classes:
+            bboxes.append([int(res[0]), int(res[1]), int(res[2]), int(res[3])])
+    return bboxes, resultsyolo
+
+
+def draw_img_with_yoloresults(img, results, classes=["car"]):
+    """
+    Draws the results of the yolov5 model on the image.
+    :param img: image to draw on
+    :param results: results of the yolov5 model
+    :param classes: list of classes to draw, defaults to ["car"]
+    :return: image with the results drawn
+    """
+    # define colors for each class
+    class_colors = {"car": (0, 0, 255), "person": (255, 0, 0), "bicycle": (0, 255, 0), "motorcycle": (0, 255, 255), "truck": (255, 0, 255)}
+
+    # paint image
+    imgcopy = img.copy()
+
+    # for each bbox
+    for res in results:
+        if str(res[-1]) in classes:
+            # get the color for the class
+            color = class_colors.get(str(res[-1]), (0, 0, 0))  # defaults to black if the class isn't in the dictionary
+
+            # draw the bbox with the class color
+            cv2.rectangle(imgcopy, (int(res[0]), int(res[1])), (int(res[2]), int(res[3])), color, 2)
+
+            # draw the class label with the class color
+            cv2.putText(imgcopy, str(res[-1]) + " " + str(res[4])[:5], (int(res[0]), int(res[1])),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+
+    return imgcopy
+
+def save_bboxes_to_file(bboxes: Dict, path: str):
+    """
+    Saves the bounding boxes to a file.
+    :param bboxes: dictionary of bounding boxes
+    :param path: path to save the file
+    """
+    with open(path, "w") as f:
+        yaml.dump(bboxes, f)
+
+def load_bboxes_from_file(path: str):
+    # open the YAML file for reading
+    with open(path, 'r') as file:
+        # load the YAML data from the file
+        yaml_data = yaml.load(file, Loader=yaml.FullLoader)
+    return yaml_data
+
 
 def transform_color_space(frames: np.ndarray, color_space:str) -> np.ndarray:
     """

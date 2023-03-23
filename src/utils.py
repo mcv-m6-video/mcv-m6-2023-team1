@@ -16,11 +16,12 @@ ChannelsUsedFromColorSpace = {"RGB": [0,1,2],
                               "YUV": [1,2],
                               "XYZ":[0,2]}
 
-def results_yolov5_to_bbox(results, classes=["car"]):
+def results_yolov5_to_bbox(results, classes=["car"], min_conf=0.25):
     """
     Converts the results of the yolov5 model to a list of bounding boxes.
     :param results: results of the yolov5 model
     :param classes: classes to consider
+    :param min_conf: minimum confidence to consider a detection
     :return: list of bounding boxes - top left bottom right
     """
     resultsyolo = results.pandas().xyxy[0]
@@ -29,20 +30,23 @@ def results_yolov5_to_bbox(results, classes=["car"]):
     bboxes = []
     for res in resultsyolo:
         if str(res[-1]) in classes:
-            bboxes.append([int(res[0]), int(res[1]), int(res[2]), int(res[3])])
+            if res[4] > min_conf:
+                bboxes.append([int(res[0]), int(res[1]), int(res[2]), int(res[3])])
     return bboxes, resultsyolo
 
 
-def draw_img_with_yoloresults(img, results, classes=["car"]):
+def draw_img_with_yoloresults(img, results, classes=["car"], gt_bboxes=None, show_gt=False):
     """
     Draws the results of the yolov5 model on the image.
     :param img: image to draw on
     :param results: results of the yolov5 model
     :param classes: list of classes to draw, defaults to ["car"]
+    :param gt_bboxes: ground truth bounding boxes
+    :param show_gt: whether to show the ground truth bounding boxes
     :return: image with the results drawn
     """
     # define colors for each class
-    class_colors = {"car": (0, 0, 255), "person": (255, 0, 0), "bicycle": (0, 255, 0), "motorcycle": (0, 255, 255), "truck": (255, 0, 255)}
+    class_colors = {}#{"car": (0, 0, 255), "person": (255, 0, 0), "bicycle": (0, 255, 0), "motorcycle": (0, 255, 255), "truck": (255, 0, 255)}
 
     # paint image
     imgcopy = img.copy()
@@ -51,7 +55,7 @@ def draw_img_with_yoloresults(img, results, classes=["car"]):
     for res in results:
         if str(res[-1]) in classes:
             # get the color for the class
-            color = class_colors.get(str(res[-1]), (0, 0, 0))  # defaults to black if the class isn't in the dictionary
+            color = class_colors.get(str(res[-1]), (0, 255, 0))  # defaults to black if the class isn't in the dictionary
 
             # draw the bbox with the class color
             cv2.rectangle(imgcopy, (int(res[0]), int(res[1])), (int(res[2]), int(res[3])), color, 2)
@@ -59,6 +63,10 @@ def draw_img_with_yoloresults(img, results, classes=["car"]):
             # draw the class label with the class color
             cv2.putText(imgcopy, str(res[-1]) + " " + str(res[4])[:5], (int(res[0]), int(res[1])),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+    if show_gt:
+        for gt_bbox in gt_bboxes:
+            cv2.rectangle(imgcopy, (int(gt_bbox[0]), int(gt_bbox[1])), (int(gt_bbox[2]), int(gt_bbox[3])), (0, 0, 255), 2)
+
 
     return imgcopy
 

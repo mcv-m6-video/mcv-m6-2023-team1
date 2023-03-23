@@ -29,23 +29,25 @@ def task1(cfg: Dict):
 
 
     #load model
-    if cfg["model"] == "yolov5":
+    if cfg["model"]["name"] == "yolov5":
         model = torch.hub.load('ultralytics/yolov5', 'yolov5x')
 
     #keep only dataset of train video
     dataset = dataset[int(len(dataset)*0.25):]
+    gt_bboxes = [*gt_labels.values()]
+    gt_test_bboxes = gt_bboxes[int(len(gt_bboxes)*0.25):]
 
     bboxes = []
     results_model = []
     for i, frame in tqdm(enumerate(dataset)):
 
         img = cv2.imread(frame[1])
-        if cfg["model"] == "yolov5":
+        if cfg["model"]["name"] == "yolov5":
             # process frame with yolo
             results = model(img)
 
-        bounding_boxes, yolo_results_np = results_yolov5_to_bbox(results, ["car", "truck"])
-        img_out = draw_img_with_yoloresults(img, yolo_results_np, ["car", "truck"])
+        bounding_boxes, yolo_results_np = results_yolov5_to_bbox(results, ["car", "truck"], cfg["model"]["min_conf"])
+        img_out = draw_img_with_yoloresults(img, yolo_results_np, ["car", "truck"], gt_test_bboxes[i], cfg["visualization"]["show_gt"])
 
 
         if cfg["visualization"]["show_detection"]:
@@ -59,9 +61,7 @@ def task1(cfg: Dict):
         results_model.append(yolo_results_np)
         bboxes.append(bounding_boxes)
 
-    gt_bboxes = [*gt_labels.values()]
-    first_test_idx = len(gt_labels) - len(bboxes)
-    gt_test_bboxes = gt_bboxes[first_test_idx:]
+
 
     # save bboxes
     if cfg["bboxes"]["save"]:

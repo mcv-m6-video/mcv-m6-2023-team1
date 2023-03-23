@@ -1,6 +1,10 @@
-model: yolov5
+model:
+  name: yolov5
+  min_conf: 0.25
+
 visualization:
   show_detection: False
+  show_gt: True
   save: False
 bboxes:
   save: True

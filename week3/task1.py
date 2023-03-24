@@ -6,10 +6,11 @@ import numpy as np
 from tqdm import tqdm
 import time
 import torch
+from ultralytics import YOLO #pip install ultralytics
 
 from src.background_estimation import get_background_estimator
 from src.in_out import extract_frames_from_video, get_frames_paths_from_folder, extract_rectangles_from_xml, load_images, extract_not_parked_rectangles_from_xml
-from src.utils import open_config_yaml, results_yolov5_to_bbox, draw_img_with_yoloresults, save_bboxes_to_file
+from src.utils import open_config_yaml, results_yolov5_to_bbox, draw_img_with_yoloresults, save_bboxes_to_file, results_yolov8_to_bbox
 from src.plotting import save_results
 from src.metrics import get_allFrames_ap, get_mIoU
 
@@ -31,6 +32,8 @@ def task1(cfg: Dict):
     #load model
     if cfg["model"]["name"] == "yolov5":
         model = torch.hub.load('ultralytics/yolov5', 'yolov5x')
+    if cfg["model"]["name"] == "yolov8":
+        model = YOLO('yolov8x.pt')  # load an official model
 
     #keep only dataset of train video
     dataset = dataset[int(len(dataset)*0.25):]
@@ -42,11 +45,14 @@ def task1(cfg: Dict):
     for i, frame in tqdm(enumerate(dataset)):
 
         img = cv2.imread(frame[1])
-        if cfg["model"]["name"] == "yolov5":
+        if cfg["model"]["name"] == "yolov5" or cfg["model"]["name"] == "yolov8":
             # process frame with yolo
             results = model(img)
 
-        bounding_boxes, yolo_results_np = results_yolov5_to_bbox(results, ["car", "truck"], cfg["model"]["min_conf"])
+        if cfg["model"]["name"] == "yolov5":
+            bounding_boxes, yolo_results_np = results_yolov5_to_bbox(results, ["car", "truck"], cfg["model"]["min_conf"])
+        if cfg["model"]["name"] == "yolov8":
+            bounding_boxes, yolo_results_np = results_yolov8_to_bbox(results, ["car", "truck"], cfg["model"]["min_conf"])
         img_out = draw_img_with_yoloresults(img, yolo_results_np, ["car", "truck"], gt_test_bboxes[i], cfg["visualization"]["show_gt"])
 
 

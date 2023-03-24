@@ -1,9 +1,9 @@
 model:
-  name: yolov5
+  name: yolov8
   min_conf: 0.25
 
 visualization:
-  show_detection: False
+  show_detection: True
   show_gt: True
   save: False
 bboxes:

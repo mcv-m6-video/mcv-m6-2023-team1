@@ -4,6 +4,7 @@ import numpy as np
 import torch
 from numpy.linalg import inv
 from tqdm import tqdm
+from src.utils import save_bboxes_to_file
 
 
 def cwh_to_ltrb(box, as_integer: bool = True):
@@ -62,13 +63,15 @@ def main():
 
     model = torch.hub.load("ultralytics/yolov5", "yolov5x")
 
-    path_dataset_to_label_txt = "../dataset/w2_t1_frames/"
+    path_dataset_to_label_txt = "../dataset/w3_frames/"
     list_imgs_to_label = os.listdir(path_dataset_to_label_txt)
     #keep only ones ending in .jpg of list_imgs_to_label
     list_imgs_to_label = [x for x in list_imgs_to_label if x[-4:] == ".jpg"]
 
-    for img_path in tqdm(list_imgs_to_label):
 
+    detections_all_frames= []
+    for img_path in tqdm(list_imgs_to_label):
+        det_frame = []
         img = cv2.imread(path_dataset_to_label_txt + img_path)
 
         results = model(img, size=1080)  # includes NMS
@@ -76,17 +79,19 @@ def main():
         detections = detect_yolov5(res.to_numpy())  # already in cwh
 
         # if txt exists, delete and do again
-        if os.path.isdir(path_dataset_to_label_txt + img_path[:-5] + ".txt"):
+        if os.path.isdir(path_dataset_to_label_txt + img_path[:-4] + ".txt"):
 
-            os.remove(path_dataset_to_label_txt + img_path[:-5] + ".txt")
+            os.remove(path_dataset_to_label_txt + img_path[:-4] + ".txt")
 
         # write file
-        f = open(path_dataset_to_label_txt + img_path[:-5] + ".txt", "w+")
+        f = open(path_dataset_to_label_txt + img_path[:-4] + ".txt", "w+")
         for det in detections:
             if det[0] != 2:
                 continue
             if det[1] < 0.25:
                 continue
+            det_frame.append([det[2][0], det[2][1],det[2][2], det[2][3]])
+
             centerx, centery, boxw, boxh = cvFormattoYolo(
                 det[2], img.shape[0], img.shape[1]
             )
@@ -103,6 +108,8 @@ def main():
                 + "\n"
             )
         f.close()
+        detections_all_frames.append(det_frame)
+    save_bboxes_to_file(detections_all_frames, "bboxes_own_GT.yaml")
 
 
 if __name__ == "__main__":

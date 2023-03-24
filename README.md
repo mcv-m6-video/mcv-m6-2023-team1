@@ -46,3 +46,13 @@ Finally, in the task 4 config file can be fine tuned the following parameters:
 - estimator: "single_gaussian", "adaptive_single_gaussian", or "multi_gaussian"
 - method: "adaptative" or "non-adaptative"
 - color_space: "RGB", "HSV", "YUV", "XYZ"
+
+## Week 3
+
+- [Source Code](https://github.com/mcv-m6-video/mcv-m6-2023-team1/tree/main/week3)
+- [Presentation](https://docs.google.com/presentation/d/1bTaPiW5-V4t5nyi4mDJ3oiAD_aPqXAO3lbOn-PdhqBw/edit#slide=id.g2238731dbee_0_53)
+- 
+The dataset created in 1.2. can be found in YOLO format (a txt for each frame of the sequence) in the folder week3/S05_c010_ownGT/*
+In the same folder a yaml can be found, which contains the information of the own GT. 
+The yaml file can be opened with the python package yaml, and consist of a List (for each frame) of Lists (for each object in the frame) of the different bboxes.
+Moreover, a visual GIF of the GT over the sequence can be found in the slides.

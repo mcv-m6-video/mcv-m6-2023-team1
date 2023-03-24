@@ -124,6 +124,48 @@ def extract_rectangles_from_xml_detection(path_to_xml_file):
 
     return sort_dict(frame_dict)
 
+def extract_rectangles_from_xml_detection_justbboxes(path_to_xml_file):
+    """
+    Parses an XML annotation file in the Pascal VOC format and extracts bounding box coordinates for cars in each frame.
+    Args:
+    - path_to_xml_file: path to the annotation XML file.
+
+    Returns:
+    - A dictionary of frame numbers and their corresponding car bounding box coordinates. (Just cars and non occluded)
+        example: dict = {'f_0': [[x1, y1, x2, y2], [x1, y1, x2, y2], ...]]}
+        where x1, y1, x2, y2 are the coordinates of the bounding box in the top left and bottom right corners.
+
+    """
+
+    tree = elemTree.parse(path_to_xml_file)
+    root = tree.getroot()
+
+    # Initialize an empty dictionary to hold the frame numbers and their corresponding bounding box coordinates
+    frame_dict = {}
+
+    # Loop through each 'track' element in the XML file with a 'label' attribute of 'car'
+    for track in root.findall(".//track"):
+        label = track.attrib["label"]
+        track_id = int(track.attrib["id"])
+        # Loop through each 'box' element within the 'track' element to get the bounding box coordinates
+        for box in track.findall(".//box"):
+            if box.attrib['occluded'] == '0':
+                # Extract the bounding box coordinates and the frame number
+                x1 = float(box.attrib['xtl'])
+                y1 = float(box.attrib['ytl'])
+                x2 = float(box.attrib['xbr'])
+                y2 = float(box.attrib['ybr'])
+                frame_num = f"f_{box.attrib['frame']}"
+
+                # If the frame number doesn't exist in the dictionary yet, add it and initialize an empty list
+                if frame_num not in frame_dict:
+                    frame_dict[frame_num] = []
+
+                # Append the bounding box coordinates to the list for the current frame number
+                frame_dict[frame_num].append([x1, y1, x2, y2])
+
+    return sort_dict(frame_dict)
+
 
 def extract_not_parked_rectangles_from_xml(path_to_xml_file):
     """

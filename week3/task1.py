@@ -9,8 +9,10 @@ import torch
 from ultralytics import YOLO #pip install ultralytics
 
 from src.background_estimation import get_background_estimator
-from src.in_out import extract_frames_from_video, get_frames_paths_from_folder, extract_rectangles_from_xml, load_images, extract_not_parked_rectangles_from_xml
-from src.utils import open_config_yaml, results_yolov5_to_bbox, draw_img_with_yoloresults, save_bboxes_to_file, results_yolov8_to_bbox
+from src.in_out import extract_frames_from_video, get_frames_paths_from_folder, extract_rectangles_from_xml,\
+    load_images, extract_not_parked_rectangles_from_xml
+from src.utils import open_config_yaml, results_yolov5_to_bbox, draw_img_with_yoloresults, save_bboxes_to_file,\
+    results_yolov8_to_bbox
 from src.plotting import save_results
 from src.metrics import get_allFrames_ap, get_mIoU
 
@@ -23,7 +25,6 @@ def task1(cfg: Dict):
 
     extract_frames_from_video(video_path=paths["video"], output_path=paths["extracted_frames"])
     gt_labels = extract_rectangles_from_xml(cfg["paths"]["annotations"])
-    # gt_labels = extract_not_parked_rectangles_from_xml(cfg["paths"]["annotations"])
     frames = get_frames_paths_from_folder(input_path=paths["extracted_frames"])
     print("Number of frames: ", len(frames))
     dataset = [(key, frames[key])for key in gt_labels.keys()]

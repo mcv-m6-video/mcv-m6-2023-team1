@@ -82,7 +82,7 @@ def extract_rectangles_from_xml(path_to_xml_file):
     return sort_dict(frame_dict)
 
 
-def extract_rectangles_from_xml_yolo(path_to_xml_file):
+def extract_rectangles_from_xml_detection(path_to_xml_file):
     """
     Parses an XML annotation file in the Pascal VOC format and extracts bounding box coordinates for cars in each frame.
     Args:

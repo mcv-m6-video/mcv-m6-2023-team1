@@ -116,7 +116,7 @@ def results_yolov5_to_bbox(results, classes=["car"], min_conf=0.25):
     for res in resultsyolo:
         if str(res[-1]) in classes:
             if res[4] > min_conf:
-                bboxes.append([int(res[0]), int(res[1]), int(res[2]), int(res[3])])
+                bboxes.append([int(res[0]), int(res[1]), int(res[2]), int(res[3]), float(res[4])])
     return bboxes, resultsyolo
 
 def results_yolov8_to_bbox(results, classes=["car"], min_conf=0.25):
@@ -132,7 +132,7 @@ def results_yolov8_to_bbox(results, classes=["car"], min_conf=0.25):
     for res in bboxes_frame:
         if str(get_coco_name_from_id(res.cls[-1])) in classes:
             if float(res.conf[-1]) > min_conf:
-                bboxes.append([int(res.boxes[0][0]), int(res.boxes[0][1]), int(res.boxes[0][2]), int(res.boxes[0][3])])
+                bboxes.append([int(res.boxes[0][0]), int(res.boxes[0][1]), int(res.boxes[0][2]), int(res.boxes[0][3]), float(res.conf[-1])])
 
     #create yolov8_np_results, wich has to be an array for each bbox, with top left right bottom coordinates, confidence, class id and class name
     yolov8_np_results = []

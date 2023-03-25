@@ -78,7 +78,7 @@ def task1(cfg: Dict):
         # a = load_bboxes_from_file(save_path + cfg["bboxes"]["name"] + ".yaml")
 
     # Compute mAP and mIoU
-    mAP = get_allFrames_ap(gt_test_bboxes, bboxes)
+    mAP = get_allFrames_ap(gt_test_bboxes, bboxes, confidence=True)
     mIoU = get_mIoU(gt_test_bboxes, bboxes)
     print(f"mAP: {mAP}")
     print(f"mIoU: {mIoU}")

@@ -142,6 +142,28 @@ def results_yolov8_to_bbox(results, classes=["car"], min_conf=0.25):
                 yolov8_np_results.append([int(res.boxes[0][0]), int(res.boxes[0][1]), int(res.boxes[0][2]), int(res.boxes[0][3]), float(res.conf[-1]), int(res.cls[-1]), str(get_coco_name_from_id(res.cls[-1]))])
     return bboxes, np.array(yolov8_np_results)
 
+def results_detectron2_to_bbox(results, classes=["car"], min_conf=0.25):
+    """
+    Converts the results of the detectron2 models to a list of bounding boxes.
+    :param results: results of the faster_rcnn, mask_rcnn, or retina model
+    :param classes: classes to consider
+    :param min_conf: minimum confidence to consider a detection
+    :return: list of bounding boxes - top left bottom right
+    """
+    bboxes = []
+    np_results = []
+    bboxes_frame = results['instances'].pred_boxes.tensor.cpu().numpy()
+    classes_frame = results['instances'].pred_classes.cpu().numpy()
+    conf_frame = results['instances'].scores.cpu().numpy()
+
+    #extract the bounding boxes and score confidence with the class ids selected
+    for i in range(len(bboxes_frame)):
+        if str(get_coco_name_from_id(classes_frame[i])) in classes:
+            if float(conf_frame[i]) > min_conf:
+                bboxes.append([int(bboxes_frame[i][0]), int(bboxes_frame[i][1]), int(bboxes_frame[i][2]), int(bboxes_frame[i][3]), float(conf_frame[i])])
+                np_results.append([int(bboxes_frame[i][0]), int(bboxes_frame[i][1]), int(bboxes_frame[i][2]), 
+                                   int(bboxes_frame[i][3]), float(conf_frame[i]), int(classes_frame[i]), str(get_coco_name_from_id(classes_frame[i]))])
+    return bboxes, np.array(np_results)
 
 def draw_img_with_yoloresults(img, results, classes=["car"], gt_bboxes=None, show_gt=False):
     """

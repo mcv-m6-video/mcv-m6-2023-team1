@@ -1,5 +1,5 @@
 model:
-  name: yolov8
+  name: retinanet
   min_conf: 0.25
 
 visualization:
@@ -9,7 +9,7 @@ visualization:
 bboxes:
   save: True
   path: '../dataset/'
-  name: 'yolov5_bboxes'
+  name: 'retinanet_bboxes'
 
 
 paths:

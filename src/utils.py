@@ -355,3 +355,46 @@ def open_config_yaml(cfg_path):
         config_yaml = yaml.safe_load(f)
 
     return config_yaml
+
+def draw_img_with_ids(img, frame_bboxes):
+    """
+    Draws the bounding boxes with IDs on the image.
+    :param img: image to draw on
+    :param frame_bboxes: frame bboxes with ids
+    :return: image with the bounding boxes and IDs drawn
+    """   
+    # paint image
+    imgcopy = img.copy()
+
+    for res in frame_bboxes:
+        cv2.rectangle(imgcopy, (int(res[0]), int(res[1])), (int(res[2]), int(res[3])), (0, 0, 255), 2)
+        # draw the class label with the class color
+        cv2.putText(imgcopy, "ID: " + str(res[4]) + " ", (int(res[0]), int(res[1])),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+    return imgcopy
+
+def draw_bboxes_trajectory(overlay, current_frame, previous_frame):
+    """
+    Draws the trajectory lines of the detected vehicles.
+    :param overlay: Overlay image to draw on
+    :param current_frame: current frame bboxes with ids
+    :param current_frame: previous frame bboxes with ids
+    :return: overlay image with the trajectory lines drawn
+    """    
+    # paint image
+    imgcopy = overlay.copy()
+
+    for prev_bbox in previous_frame:
+        if prev_bbox[4] in current_frame[:,4]:
+            i = np.where(current_frame[:,4] == prev_bbox[4])
+            # Obatin the bounding box that has the same ID in current frame
+            curr_bbox = current_frame[i][0]
+            #Calculate the center of the bounding boxes from previous and current frame
+            prev_centroid = [int((prev_bbox[2]-prev_bbox[0])/2+prev_bbox[0]), int((prev_bbox[3]-prev_bbox[1])/2+prev_bbox[1])]
+            curr_centroid = [int((curr_bbox[2]-curr_bbox[0])/2+curr_bbox[0]), int((curr_bbox[3]-curr_bbox[1])/2+curr_bbox[1])]
+            #Draw a line from the center of previous bbox to current bbox
+            if prev_centroid[0] - curr_centroid[0] == 0 and prev_centroid[1] - curr_centroid[1] == 0:
+                pass
+            else:
+                cv2.line(imgcopy, prev_centroid, curr_centroid, (0, 255, 0), 2)
+    return imgcopy

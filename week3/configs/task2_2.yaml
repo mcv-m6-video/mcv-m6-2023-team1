@@ -1,0 +1,16 @@
+model:
+  use_gt: False
+  first_frame: 20
+  last_frame: 400 
+
+visualization:
+  show_detection: True
+  save: False
+
+paths:
+  annotations: '../dataset/ai_challenge_s03_c010-full_annotation.xml'
+  video: '../dataset/AICity_data/train/S03/c010/vdo.avi'
+  extracted_frames: '../dataset/w2_t1_frames'
+  detected_bboxes: '../dataset/retinanet_bboxes.yaml'
+  output: '../output/task2.2/RetinaNet'
+

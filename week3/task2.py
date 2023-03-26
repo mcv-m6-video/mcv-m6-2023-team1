@@ -1,4 +1,6 @@
 import argparse
+from typing import List
+
 import cv2
 import os
 import sys
@@ -10,7 +12,88 @@ from tqdm import tqdm
 # Import Sort for tracking using Kalman filter
 from sort import Sort
 from src.in_out import extract_frames_from_video, get_frames_paths_from_folder, extract_rectangles_from_xml
+from src.metrics import get_IoU
 from src.utils import open_config_yaml, load_bboxes_from_file, draw_img_with_ids, draw_bboxes_trajectory
+
+
+def draw_bboxes_and_trajectory(first_frame, last_frame, viz_config, track_bbs_ids, dataset, out_path):
+    # Draw the bounding boxes and the trajectory
+    overlay = np.zeros_like(cv2.imread(dataset[0][1]))
+    for i, frame in tqdm(enumerate(dataset)):
+        if first_frame < i < last_frame:
+            if i == 0:
+                continue  # Skip the first frame
+            img = cv2.imread(frame[1])
+            # Draw the trajectory lines
+            overlay = draw_bboxes_trajectory(overlay, track_bbs_ids[i], track_bbs_ids[i - 1])
+            # Draw the bounding boxes with ID number
+            img_out = draw_img_with_ids(img, track_bbs_ids[i])
+            # Fuse both images
+            img_out = cv2.addWeighted(img_out, 1, overlay, 1, 0)
+
+            # Show the frame with the trajectory and bounding boxes IDs
+            if viz_config['show_detection']:
+                cv2.imshow('frame2', img_out)
+                k = cv2.waitKey(30) & 0xff
+                if k == 27:
+                    break
+
+            # Save the frame
+            if viz_config['save']:
+                os.makedirs(out_path, exist_ok=True)
+                cv2.imwrite(os.path.join(out_path, str(i) + '.png'), img_out,
+                            [int(cv2.IMWRITE_PNG_COMPRESSION), 9])
+
+
+class MOTTrackerOverlap:
+    """
+    This class implements a simple tracker based on detection overlap.
+    """
+
+    def __init__(self):
+        self.track_id = 0
+        self.tracks = {}
+        self.frame_id = 0
+
+    def update(self, dets):
+        """
+        This method updates the tracker with the new detections.
+
+        :param dets: numpy array with the detections for the current frame
+        :return: numpy array with the detections for the current frame and the track_id
+        """
+        updated_dets = []
+        for det in dets:
+            max_overlap = 0
+            max_track_id = None
+
+            for track_id, track in self.tracks.items():
+                overlap = self._compute_overlap(det, track[-1])
+                if overlap > max_overlap:
+                    max_overlap = overlap
+                    max_track_id = track_id
+
+            if max_overlap > 0.5:
+                self.tracks[max_track_id].append(det)
+                updated_dets.append(np.append(det, max_track_id))
+            else:
+                self.tracks[self.track_id] = [det]
+                updated_dets.append(np.append(det, self.track_id))
+                self.track_id += 1
+
+        self.frame_id += 1
+        return np.array(updated_dets)
+
+    @staticmethod
+    def _compute_overlap(det1: List, det2: List) -> float:
+        """
+        This method computes the overlap between two detections.
+
+        :param det1: numpy array with the first detection
+        :param det2: numpy array with the second detection
+        :return: float with the overlap
+        """
+        return get_IoU(det1, det2)
 
 
 def task2_1(out_path, dataset, bboxes, first_frame, last_frame, visualization_cfg):
@@ -24,7 +107,18 @@ def task2_1(out_path, dataset, bboxes, first_frame, last_frame, visualization_cf
     :param last_frame: last frame to process
     :param visualization_cfg: dictionary with the visualization configuration
     """
-    pass
+    mot_tracker_overlap = MOTTrackerOverlap()
+
+    track_bbs_ids = []
+    # update SORT
+    for frame_bboxes in bboxes:
+        # np array where each row contains a valid bounding box and track_id (last column)
+        for i in range(len(frame_bboxes)):
+            frame_bboxes[i] = frame_bboxes[i][:-1]
+        track_bbs_ids.append(mot_tracker_overlap.update(np.array(frame_bboxes)))
+
+    # Draw the bounding boxes and the trajectory
+    draw_bboxes_and_trajectory(first_frame, last_frame, visualization_cfg, track_bbs_ids, dataset, out_path)
 
 
 def task2_2(out_path, dataset, bboxes, first_frame, last_frame, visualization_cfg):
@@ -51,29 +145,7 @@ def task2_2(out_path, dataset, bboxes, first_frame, last_frame, visualization_cf
         track_bbs_ids.append(mot_tracker.update(np.array(frame_bboxes)))
 
     # Draw the bounding boxes and the trajectory
-    overlay = np.zeros_like(cv2.imread(dataset[0][1]))
-    for i, frame in tqdm(enumerate(dataset)):
-        if first_frame < i < last_frame:
-            img = cv2.imread(frame[1])
-            # Draw the trajectory lines
-            overlay = draw_bboxes_trajectory(overlay, track_bbs_ids[i], track_bbs_ids[i - 1])
-            # Draw the bounding boxes with ID number
-            img_out = draw_img_with_ids(img, track_bbs_ids[i])
-            # Fuse both images
-            img_out = cv2.addWeighted(img_out, 1, overlay, 1, 0)
-
-            # Show the frame with the trajectory and bounding boxes IDs
-            if visualization_cfg['show_detection']:
-                cv2.imshow('frame2', img_out)
-                k = cv2.waitKey(30) & 0xff
-                if k == 27:
-                    break
-
-            # Save the frame
-            if visualization_cfg['save']:
-                os.makedirs(out_path, exist_ok=True)
-                cv2.imwrite(os.path.join(out_path, str(i) + '.png'), img_out,
-                            [int(cv2.IMWRITE_PNG_COMPRESSION), 9])
+    draw_bboxes_and_trajectory(first_frame, last_frame, visualization_cfg, track_bbs_ids, dataset, out_path)
 
 
 def task2_3(cfg):
@@ -102,7 +174,14 @@ def main(cfg):
     # dataset = dataset[first_frame:last_frame]
     dataset = dataset[int(len(dataset) * 0.25):]
     print("Number of frames: ", len(dataset))
-    # task2_1()
+    task2_1(
+        out_path=paths["output"],
+        dataset=dataset,
+        bboxes=bboxes,
+        first_frame=model_cfg['first_frame'],
+        last_frame=model_cfg['last_frame'],
+        visualization_cfg=visualization_cfg
+    )
     task2_2(
         out_path=paths["output"],
         dataset=dataset,

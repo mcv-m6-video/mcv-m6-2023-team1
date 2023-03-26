@@ -190,6 +190,7 @@ def main(cfg):
         last_frame=model_cfg['last_frame'],
         visualization_cfg=visualization_cfg
     )
+    # TODO: I would return the tracking results from both metrics and then compute the metrics on the task
     # task2_3(config)
 
 

@@ -1,32 +1,27 @@
 import argparse
-import sys, os
-#sys.path.append(os.path.join(os.path.realpath(os.path.dirname(__file__)), "../")) # comment if you are not using Visual Studio Code
+import sys
+# sys.path.append(os.path.join(os.path.realpath(os.path.dirname(__file__)), "../")) # comment if you are not using
+# Visual Studio Code
 from typing import Dict
-import cv2
-import numpy as np
-from tqdm import tqdm
-import time
-import torch
-from ultralytics import YOLO #pip install ultralytics
 
+import cv2
+import torch
 # Setup detectron2 logger
 from detectron2.utils.logger import setup_logger
-setup_logger()
+from tqdm import tqdm
+from ultralytics import YOLO  # pip install ultralytics
 
 # import some common detectron2 utilities
 from detectron2 import model_zoo
 from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
-from detectron2.utils.visualizer import Visualizer
-from detectron2.data import MetadataCatalog
 
-from src.background_estimation import get_background_estimator
-from src.in_out import extract_frames_from_video, get_frames_paths_from_folder, extract_rectangles_from_xml,\
-    load_images, extract_not_parked_rectangles_from_xml
-from src.utils import open_config_yaml, results_yolov5_to_bbox, draw_img_with_yoloresults, save_bboxes_to_file,\
+from src.in_out import extract_frames_from_video, get_frames_paths_from_folder, extract_rectangles_from_xml
+from src.utils import open_config_yaml, results_yolov5_to_bbox, draw_img_with_yoloresults, save_bboxes_to_file, \
     results_yolov8_to_bbox, results_detectron2_to_bbox
-from src.plotting import save_results
 from src.metrics import get_allFrames_ap, get_mIoU
+
+setup_logger()
 
 
 def task1(cfg: Dict):
@@ -39,22 +34,21 @@ def task1(cfg: Dict):
     gt_labels = extract_rectangles_from_xml(cfg["paths"]["annotations"])
     frames = get_frames_paths_from_folder(input_path=paths["extracted_frames"])
     print("Number of frames: ", len(frames))
-    dataset = [(key, frames[key])for key in gt_labels.keys()]
+    dataset = [(key, frames[key]) for key in gt_labels.keys()]
 
-
-    #load model
+    # load model
     if cfg["model"]["name"] == "yolov5":
         model = torch.hub.load('ultralytics/yolov5', 'yolov5x')
     if cfg["model"]["name"] == "yolov8":
         model = YOLO('yolov8x.pt')  # load an official model
-    
-    #if model is faster_cnn or retinaNet, we use detectron2 to load it   
+
+    # if model is faster_cnn or retinaNet, we use detectron2 to load it
     if cfg["model"]["name"] == "faster_rcnn" or cfg["model"]["name"] == "retinanet":
         if cfg["model"]["name"] == "faster_rcnn":
             model_name = 'COCO-Detection/faster_rcnn_X_101_32x8d_FPN_3x.yaml'
         if cfg["model"]["name"] == "retinanet":
             model_name = 'COCO-Detection/retinanet_R_101_FPN_3x.yaml'
-        
+
         config = get_cfg()
 
         # add project-specific config (e.g., TensorMask) here if you're not running a model in detectron2's core library
@@ -65,10 +59,10 @@ def task1(cfg: Dict):
         config.MODEL.WEIGHTS = model_zoo.get_checkpoint_url(model_name)
         model = DefaultPredictor(config)
 
-    #keep only dataset of train video
-    dataset = dataset[int(len(dataset)*0.25):]
+    # keep only dataset of train video
+    dataset = dataset[int(len(dataset) * 0.25):]
     gt_bboxes = [*gt_labels.values()]
-    gt_test_bboxes = gt_bboxes[int(len(gt_bboxes)*0.25):]
+    gt_test_bboxes = gt_bboxes[int(len(gt_bboxes) * 0.25):]
 
     bboxes = []
     results_model = []
@@ -79,28 +73,28 @@ def task1(cfg: Dict):
             # process frame with yolo
             results = model(img)
             if cfg["model"]["name"] == "yolov5":
-                bounding_boxes, yolo_results_np = results_yolov5_to_bbox(results, ["car", "truck"], cfg["model"]["min_conf"])
+                bounding_boxes, yolo_results_np = results_yolov5_to_bbox(results, ["car", "truck"],
+                                                                         cfg["model"]["min_conf"])
             if cfg["model"]["name"] == "yolov8":
-                bounding_boxes, yolo_results_np = results_yolov8_to_bbox(results, ["car", "truck"], cfg["model"]["min_conf"])
-        
+                bounding_boxes, yolo_results_np = results_yolov8_to_bbox(results, ["car", "truck"],
+                                                                         cfg["model"]["min_conf"])
+
         if cfg["model"]["name"] == "faster_rcnn" or cfg["model"]["name"] == "retinanet":
             results = model(img)
-            bounding_boxes, yolo_results_np = results_detectron2_to_bbox(results, ["car", "truck"], cfg["model"]["min_conf"])
+            bounding_boxes, yolo_results_np = results_detectron2_to_bbox(results, ["car", "truck"],
+                                                                         cfg["model"]["min_conf"])
 
-        
         if cfg["visualization"]["show_detection"]:
-            img_out = draw_img_with_yoloresults(img, yolo_results_np, ["car", "truck"], gt_test_bboxes[i], cfg["visualization"]["show_gt"])
+            img_out = draw_img_with_yoloresults(img, yolo_results_np, ["car", "truck"], gt_test_bboxes[i],
+                                                cfg["visualization"]["show_gt"])
             cv2.imshow('frame2', img_out)
             k = cv2.waitKey(30) & 0xff
             if k == 27:
                 break
 
-
-        #save all the images to preds list
+        # save all the images to preds list
         results_model.append(yolo_results_np)
         bboxes.append(bounding_boxes)
-
-
 
     # save bboxes
     if cfg["bboxes"]["save"]:
@@ -119,17 +113,17 @@ def task1(cfg: Dict):
     print(f"mAP: {mAP}")
     print(f"mIoU: {mIoU}")
 
-    #Save results
+    # Save results
     dataset_files = [frame[1] for frame in dataset]
     # if cfg["visualization"]["save"]:
     #     save_results(bboxes, preds, gt_test_bboxes, dataset_files, multiply255=False)
 
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="configs/task1.yaml")
-    #parser.add_argument("--config", default="week3/configs/task1.yaml") #comment if you are not using Visual Studio Code
+    # parser.add_argument("--config", default="week3/configs/task1.yaml") #comment if you are not using Visual Studio
+    # Code
     args = parser.parse_args(sys.argv[1:])
 
     config = open_config_yaml(args.config)

@@ -63,11 +63,14 @@ class MOTTrackerOverlap:
         :return: numpy array with the detections for the current frame and the track_id
         """
         updated_dets = []
+        used_ids = set()
         for det in dets:
             max_overlap = 0
             max_track_id = None
 
             for track_id, track in self.tracks.items():
+                if track_id in used_ids:
+                    continue
                 overlap = self._compute_overlap(det, track[-1])
                 if overlap > max_overlap:
                     max_overlap = overlap
@@ -76,9 +79,11 @@ class MOTTrackerOverlap:
             if max_overlap > 0.5:
                 self.tracks[max_track_id].append(det)
                 updated_dets.append(np.append(det, max_track_id))
+                used_ids.add(max_track_id)
             else:
                 self.tracks[self.track_id] = [det]
                 updated_dets.append(np.append(det, self.track_id))
+                used_ids.add(self.track_id)
                 self.track_id += 1
 
         self.frame_id += 1
@@ -113,12 +118,15 @@ def task2_1(out_path, dataset, bboxes, first_frame, last_frame, visualization_cf
     # update SORT
     for frame_bboxes in bboxes:
         # np array where each row contains a valid bounding box and track_id (last column)
-        for i in range(len(frame_bboxes)):
-            frame_bboxes[i] = frame_bboxes[i][:-1]
+        if len(frame_bboxes[0]) == 5:
+            for i in range(len(frame_bboxes)):
+                frame_bboxes[i] = frame_bboxes[i][:-1]
         track_bbs_ids.append(mot_tracker_overlap.update(np.array(frame_bboxes)))
 
     # Draw the bounding boxes and the trajectory
     draw_bboxes_and_trajectory(first_frame, last_frame, visualization_cfg, track_bbs_ids, dataset, out_path)
+
+
 
 
 def task2_2(out_path, dataset, bboxes, first_frame, last_frame, visualization_cfg):

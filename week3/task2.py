@@ -188,7 +188,7 @@ def main(cfg):
     model_cfg = cfg["model"]
     visualization_cfg = cfg["visualization"]
 
-    gt_labels = extract_rectangles_from_xml(paths["annotations"], add_track_id=True)
+    gt_labels = extract_rectangles_from_xml(paths["annotations"], add_track_id=True, removed_parked=True)
     # get detections
 
     if model_cfg['use_gt']:
@@ -226,8 +226,6 @@ def main(cfg):
         last_frame=model_cfg['last_frame'],
         visualization_cfg=visualization_cfg
     )
-    # TODO: I would return the tracking results from both methods (define a return on the previous functions)
-    #  and then compute the metrics on the task
 
     if not model_cfg["use_gt"]:
         task2_3([track_bbs_ids_overlap, track_bbs_id_kalman],model_cfg)

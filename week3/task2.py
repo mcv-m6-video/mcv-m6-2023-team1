@@ -188,7 +188,7 @@ def main(cfg):
     model_cfg = cfg["model"]
     visualization_cfg = cfg["visualization"]
 
-    gt_labels = extract_rectangles_from_xml(paths["annotations"], add_track_id=True, removed_parked=True)
+    gt_labels = extract_rectangles_from_xml(paths["annotations"], add_track_id=True)
     # get detections
 
     if model_cfg['use_gt']:

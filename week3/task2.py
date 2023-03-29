@@ -15,6 +15,24 @@ from src.in_out import extract_frames_from_video, get_frames_paths_from_folder, 
 from src.metrics import get_IoU
 from src.utils import open_config_yaml, load_bboxes_from_file, draw_img_with_ids, draw_bboxes_trajectory
 
+def write_PASCAL_to_MOT_txt(track, output_path):
+    with open(output_path, "w") as file:
+        for frame, frame_track in enumerate(tqdm(track)):
+            for ann in frame_track:
+                x1, y1, x2, y2, track_id = ann
+                w = x2-x1
+                h = y2-y1
+                file.write(f"{536+frame},{track_id+1},{x1},{y1},{w},{h},1,-1,-1,-1\n")
+
+def write_gt_to_MOT_txt(track, output_path):
+    with open(output_path, "w") as file:
+        for frame, frame_track in zip(list(track.keys()),list(track.values())):
+            for ann in frame_track:
+                x1, y1, x2, y2, track_id = ann
+                w = x2-x1
+                h = y2-y1
+                file.write(f"{frame+1},{track_id+1},{x1},{y1},{w},{h},1,-1,-1,-1\n")
+
 
 def draw_bboxes_and_trajectory(first_frame, last_frame, viz_config, track_bbs_ids, dataset, out_path):
     # Draw the bounding boxes and the trajectory
@@ -124,10 +142,9 @@ def task2_1(out_path, dataset, bboxes, first_frame, last_frame, visualization_cf
         track_bbs_ids.append(mot_tracker_overlap.update(np.array(frame_bboxes)))
 
     # Draw the bounding boxes and the trajectory
-    draw_bboxes_and_trajectory(first_frame, last_frame, visualization_cfg, track_bbs_ids, dataset, out_path)
+    #draw_bboxes_and_trajectory(first_frame, last_frame, visualization_cfg, track_bbs_ids, dataset, out_path)
 
-
-
+    return track_bbs_ids
 
 def task2_2(out_path, dataset, bboxes, first_frame, last_frame, visualization_cfg):
     """
@@ -153,11 +170,17 @@ def task2_2(out_path, dataset, bboxes, first_frame, last_frame, visualization_cf
         track_bbs_ids.append(mot_tracker.update(np.array(frame_bboxes)))
 
     # Draw the bounding boxes and the trajectory
-    draw_bboxes_and_trajectory(first_frame, last_frame, visualization_cfg, track_bbs_ids, dataset, out_path)
+    #draw_bboxes_and_trajectory(first_frame, last_frame, visualization_cfg, track_bbs_ids, dataset, out_path)
+    return track_bbs_ids
 
 
-def task2_3(cfg):
-    pass
+def task2_3(tracks,  cfg):
+
+    kalman_path = "data/trackers/mot_challenge/week3-train/kalman/data/Seq03.txt"
+    overlap_path = "data/trackers/mot_challenge/week3-train/overlap/data/Seq03.txt"
+    output_paths = [overlap_path, kalman_path]
+    for track, output_path in zip(tracks, output_paths):
+        write_PASCAL_to_MOT_txt(track, output_path)
 
 
 def main(cfg):
@@ -165,13 +188,18 @@ def main(cfg):
     model_cfg = cfg["model"]
     visualization_cfg = cfg["visualization"]
 
+    gt_labels = extract_rectangles_from_xml(paths["annotations"], add_track_id=True)
     # get detections
-    gt_labels = extract_rectangles_from_xml(paths["annotations"])
+
     if model_cfg['use_gt']:
         gt_bboxes = [*gt_labels.values()]
+        gt_frames = [*gt_labels.keys()]
         bboxes = gt_bboxes[int(len(gt_labels) * 0.25):]
+        frames = gt_frames[int(len(gt_labels) * 0.25):]
     else:
         bboxes = load_bboxes_from_file(paths['detected_bboxes'])
+    if model_cfg['save_gt_tracking_MOT']:
+        write_gt_to_MOT_txt(dict(zip(frames, bboxes)), output_path = "data/gt/mot_challenge/week3-train/Seq03/gt/gt.txt")
 
     # Obtain all frames of the sequence
     extract_frames_from_video(video_path=paths["video"], output_path=paths["extracted_frames"])
@@ -182,7 +210,7 @@ def main(cfg):
     # dataset = dataset[first_frame:last_frame]
     dataset = dataset[int(len(dataset) * 0.25):]
     print("Number of frames: ", len(dataset))
-    task2_1(
+    track_bbs_ids_overlap = task2_1(
         out_path=paths["output"],
         dataset=dataset,
         bboxes=bboxes,
@@ -190,7 +218,7 @@ def main(cfg):
         last_frame=model_cfg['last_frame'],
         visualization_cfg=visualization_cfg
     )
-    task2_2(
+    track_bbs_id_kalman = task2_2(
         out_path=paths["output"],
         dataset=dataset,
         bboxes=bboxes,
@@ -200,7 +228,9 @@ def main(cfg):
     )
     # TODO: I would return the tracking results from both methods (define a return on the previous functions)
     #  and then compute the metrics on the task
-    # task2_3(config)
+
+    if not model_cfg["use_gt"]:
+        task2_3([track_bbs_ids_overlap, track_bbs_id_kalman],model_cfg)
 
 
 if __name__ == "__main__":

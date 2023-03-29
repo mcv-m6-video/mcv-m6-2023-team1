@@ -56,3 +56,16 @@ The dataset created in 1.2. can be found in YOLO format (a txt for each frame of
 In the same folder a yaml can be found, which contains the information of the own GT. 
 The yaml file can be opened with the python package yaml, and consist of a List (for each frame) of Lists (for each object in the frame) of the different bboxes.
 Moreover, a visual GIF of the GT over the sequence can be found in the slides.
+
+Task 1 can be simply used by running from root:
+```
+python3 week3/task1.py 
+```
+Task 2 can be ran the same way but the week3/configs/task2.yaml has to be modified correspondingly in order to use it 
+for visualization of results, or saving the tracking results in MOT format. 
+
+In order to evaluate the tracking results with the TrackEval , first clone the TrackEval repository locally, then copy
+data folder in the week3 directory in TrackEval and then run:
+```
+python3 TrackEval/scripts/run_mot_challenge.py --BENCHMARK week3 --TRACKERS_TO_EVAL overlap kalman --METRICS HOTA Identity --DO_PREPROC False
+```

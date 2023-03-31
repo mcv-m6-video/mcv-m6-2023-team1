@@ -12,12 +12,13 @@ from src.utils import open_config_yaml
 from src.optical_flow import OF_block_matching, save_plot_OF
 from src.metrics import mean_square_error, root_mean_square_error, mean_absolute_error, percentage_of_erroneous_pixels
 
-def main(cfg: Dict):
-    gt_path = cfg["paths"]["gt"] # Path of the ground truths
 
-    if not cfg["evaluate_own_OF"]: #if false it will evaluate the kitti made on week1
+def main(cfg: Dict):
+    gt_path = cfg["paths"]["gt"]  # Path of the ground truths
+
+    if not cfg["evaluate_own_OF"]:  # if false it will evaluate the kitti made on week1
         detections_path = cfg["paths"]["kitti"]  # Path of the detections
-    else: #Compute the optical flow with the block matching algorithm
+    else:  # Compute the optical flow with the block matching algorithm
         image45_10 = cv2.imread(cfg["paths"]["sequence45"] + "/000045_10.png", cv2.IMREAD_GRAYSCALE)
         image45_11 = cv2.imread(cfg["paths"]["sequence45"] + "/000045_11.png", cv2.IMREAD_GRAYSCALE)
         # flow_det = cv2.calcOpticalFlowFarneback(image45_10, image45_11, None, 0.5, 3, 15, 3, 5, 1.2, 0) #not block matching - “Two-Frame Motion Estimation Based on Polynomial Expansion” by Gunner Farneback in 2003.
@@ -32,7 +33,7 @@ def main(cfg: Dict):
         detections = glob.glob(cfg["paths"]["block_matching"] + "/*.png")
     detections = [det.replace("\\", "/") for det in detections]  # for Windows users
 
-    #Compute the metrics and plots for the detections
+    # Compute the metrics and plots for the detections
     for det_filename in detections:
         if not cfg["evaluate_own_OF"]:
             seq_n = det_filename.split("/")[-1].replace("LKflow_", "")

@@ -263,3 +263,36 @@ def evaluate_background_estimator(data: List[Tuple[str, Dict]], bg_estimator: Ba
         processed_bg_estimation = process_bg_estimation(raw_bg_estimation)
         pred_bboxes = get_predicted_bboxes(processed_bg_estimation)
 
+def mean_square_error(flow_gt, flow_pred):
+    """
+    Computes the mean square error between the ground truth and predicted optical flow
+    """
+    error = np.linalg.norm(flow_gt - flow_pred) ** 2 / flow_gt.size
+    return error
+
+
+def mean_absolute_error(flow_gt, flow_pred):
+    """
+    Computes the mean absolute error between the ground truth and predicted optical flow
+    """
+    error = np.sum(np.abs(flow_gt - flow_pred)) / flow_gt.size
+    return error
+
+
+def root_mean_square_error(flow_gt, flow_pred):
+    """
+    Computes the root mean square error between the ground truth and predicted optical flow
+    """
+    error = np.sqrt(np.linalg.norm(flow_gt - flow_pred) ** 2 / flow_gt.size)
+    return error
+
+
+def percentage_of_erroneous_pixels(flow_gt, flow_pred, threshold=3.0):
+    """
+    Computes the percentage of erroneous pixels between the ground truth and predicted optical flow
+    """
+    error = np.linalg.norm(flow_gt - flow_pred, axis=2)
+    num_errors = np.sum(error > threshold)
+    num_pixels = flow_gt.shape[0] * flow_gt.shape[1]
+    pepn = num_errors / num_pixels
+    return pepn

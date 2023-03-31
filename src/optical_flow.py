@@ -2,6 +2,7 @@ import os
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+from src.metrics import mean_square_error, root_mean_square_error, mean_absolute_error, percentage_of_erroneous_pixels
 
 
 def read_optical_flow(path: str) -> (np.ndarray, np.ndarray):
@@ -127,3 +128,73 @@ def draw_opt_flow_magnitude_and_direction(flow: np.ndarray):
     axs[1].set_title('Optical Flow Direction')
     axs[1].imshow(direction)
     plt.show()
+
+def save_plot_OF(OF, path):
+    # convert the flow to a three-channel image with hue for direction and value for magnitude
+    mag, ang = cv2.cartToPolar(OF[:,:,0], OF[:,:,1])
+    hsv = np.zeros((OF.shape[0], OF.shape[1], 3), dtype=np.uint8)
+    hsv[..., 0] = ang * 180 / np.pi / 2
+    hsv[..., 1] = 255
+    hsv[..., 2] = cv2.normalize(mag, None, 0, 1, cv2.NORM_MINMAX) * 255
+
+    # convert the HSV image to BGR for display and saving
+    bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+
+    # save the image as a PNG file
+    cv2.imwrite(path, bgr)
+
+def OF_block_matching(img1, img2, area_of_search=(32,32), block_size=(4,4), step_size=(4,4), error_function=mean_square_error):
+    """
+    Block matching algorithm for optical flow estimation.
+    Args:
+        img1 and img2: the two consecutive frames of the video sequence.
+        area_of_search: the size of the search area around each block.
+        block_size: the size of the blocks used for matching.
+        step_size: the stride used for sliding the blocks over the images.
+        error_function: the function used to compute the error between two blocks.
+
+    Returns:
+        A 3D numpy array of size (h, w, 2), where the third dimension corresponds to the horizontal and vertical components of the optical flow vectors.
+    """
+    h, w = img1.shape
+    num_blocks_y = h // block_size[0]
+    num_blocks_x = w // block_size[1]
+
+    flow = np.zeros((h, w, 2), dtype=np.float32)
+
+    for y in range(0, h - block_size[0], step_size[0]):
+        for x in range(0, w - block_size[1], step_size[1]):
+            # Define the search area for the current block
+            min_y = max(0, y - area_of_search[0])
+            max_y = min(h - block_size[0], y + area_of_search[0])
+            min_x = max(0, x - area_of_search[1])
+            max_x = min(w - block_size[1], x + area_of_search[1])
+
+            # Extract the block from the first image
+            block1 = img1[y:y+block_size[0], x:x+block_size[1]]
+
+            # Initialize variables for the best match
+            min_error = float('inf')
+            best_dx, best_dy = 0, 0
+
+            # Search for the best match within the search area
+            for dy in range(min_y, max_y, step_size[0]):
+                for dx in range(min_x, max_x, step_size[1]):
+                    # Extract the block from the second image
+                    block2 = img2[dy:dy+block_size[0], dx:dx+block_size[1]]
+
+                    # Compute the error between the two blocks
+                    error = error_function(block1, block2)
+
+                    # Update the best match if the error is lower
+                    if error < min_error:
+                        min_error = error
+                        best_dx, best_dy = dx - x, dy - y
+
+            # Store the flow vectors for the current block
+            for i in range(y, y+block_size[0]):
+                for j in range(x, x+block_size[1]):
+                    flow[i, j, 0] = best_dx
+                    flow[i, j, 1] = best_dy
+
+    return flow

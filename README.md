@@ -56,3 +56,8 @@ The dataset created in 1.2. can be found in YOLO format (a txt for each frame of
 In the same folder a yaml can be found, which contains the information of the own GT. 
 The yaml file can be opened with the python package yaml, and consist of a List (for each frame) of Lists (for each object in the frame) of the different bboxes.
 Moreover, a visual GIF of the GT over the sequence can be found in the slides.
+
+## Week 4
+- [Source Code](https://github.com/mcv-m6-video/mcv-m6-2023-team1/tree/main/week4)
+- [Presentation - task1](https://docs.google.com/presentation/d/1FTtwSulFm87SZkPYsDEbVqKK0ixPBFlQ0KzYLtEYOio/edit)
+- [Presentation - task2](https://docs.google.com/presentation/d/1i7jyIbeC1bf1TXjsiLCqS8t2q83O2DqegVrfY0NBrIU/edit)

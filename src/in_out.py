@@ -40,7 +40,7 @@ def extract_rectangles_from_csv(path):
     return sort_dict(ret_dict)
 
 
-def extract_rectangles_from_xml(path_to_xml_file):
+def extract_rectangles_from_xml(path_to_xml_file, add_track_id=False, removed_parked=False):
     """
     Parses an XML annotation file in the Pascal VOC format and extracts bounding box coordinates for cars in each frame.
     Args:
@@ -61,23 +61,29 @@ def extract_rectangles_from_xml(path_to_xml_file):
 
     # Loop through each 'track' element in the XML file with a 'label' attribute of 'car'
     for track in root.findall(".//track[@label='car']"):
-
+        track_id = int(track.attrib["id"])
         # Loop through each 'box' element within the 'track' element to get the bounding box coordinates
-        for box in track.findall(".//box"):
+        for box, attribute in zip(track.findall(".//box"), track.findall(".//attribute")):
 
-            # Extract the bounding box coordinates and the frame number
-            x1 = float(box.attrib['xtl'])
-            y1 = float(box.attrib['ytl'])
-            x2 = float(box.attrib['xbr'])
-            y2 = float(box.attrib['ybr'])
-            frame_num = f"f_{box.attrib['frame']}"
+            if removed_parked and attribute.text=="true":
+                continue
+            else:
+                # Extract the bounding box coordinates and the frame number
+                x1 = float(box.attrib['xtl'])
+                y1 = float(box.attrib['ytl'])
+                x2 = float(box.attrib['xbr'])
+                y2 = float(box.attrib['ybr'])
+                frame_num = f"f_{box.attrib['frame']}"
 
-            # If the frame number doesn't exist in the dictionary yet, add it and initialize an empty list
-            if frame_num not in frame_dict:
-                frame_dict[frame_num] = []
+                # If the frame number doesn't exist in the dictionary yet, add it and initialize an empty list
+                if frame_num not in frame_dict:
+                    frame_dict[frame_num] = []
 
-            # Append the bounding box coordinates to the list for the current frame number
-            frame_dict[frame_num].append([x1, y1, x2, y2])
+                # Append the bounding box coordinates to the list for the current frame number
+                if add_track_id:
+                    frame_dict[frame_num].append([x1, y1, x2, y2, track_id])
+                else:
+                    frame_dict[frame_num].append([x1, y1, x2, y2])
 
     return sort_dict(frame_dict)
 

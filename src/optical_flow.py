@@ -2,7 +2,8 @@ import os
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-from src.metrics import mean_square_error, root_mean_square_error, mean_absolute_error, percentage_of_erroneous_pixels
+from tqdm import tqdm
+from src.metrics import mean_square_error, root_mean_square_error, mean_absolute_error, percentage_of_erroneous_pixels, ncc_error, compute_distance
 
 
 def read_optical_flow(path: str) -> (np.ndarray, np.ndarray):
@@ -129,13 +130,14 @@ def draw_opt_flow_magnitude_and_direction(flow: np.ndarray):
     axs[1].imshow(direction)
     plt.show()
 
+
 def save_plot_OF(OF, path):
     # convert the flow to a three-channel image with hue for direction and value for magnitude
     mag, ang = cv2.cartToPolar(OF[:,:,0], OF[:,:,1])
     hsv = np.zeros((OF.shape[0], OF.shape[1], 3), dtype=np.uint8)
     hsv[..., 0] = ang * 180 / np.pi / 2
-    hsv[..., 1] = 255
-    hsv[..., 2] = cv2.normalize(mag, None, 0, 1, cv2.NORM_MINMAX) * 255
+    hsv[..., 1] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
+    hsv[..., 2] = 255
 
     # convert the HSV image to BGR for display and saving
     bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
@@ -143,7 +145,8 @@ def save_plot_OF(OF, path):
     # save the image as a PNG file
     cv2.imwrite(path, bgr)
 
-def OF_block_matching(img1, img2, area_of_search=(32,32), block_size=(4,4), step_size=(4,4), error_function=mean_square_error):
+
+def OF_block_matching(img1, img2, area_of_search=(60,60), block_size=(8,8), step_size=(4,4), error_function=mean_absolute_error):
     """
     Block matching algorithm for optical flow estimation.
     Args:
@@ -185,6 +188,12 @@ def OF_block_matching(img1, img2, area_of_search=(32,32), block_size=(4,4), step
 
                     # Compute the error between the two blocks
                     error = error_function(block1, block2)
+                    # #draw the block1 over the img2
+                    # img2copy = img2.copy()
+                    # img2copy[dy:dy+block_size[0], dx:dx+block_size[1]] = block1
+                    # plt.imshow(img2copy)
+                    # plt.show()
+                    # plt.tight_layout()
 
                     # Update the best match if the error is lower
                     if error < min_error:
@@ -198,3 +207,79 @@ def OF_block_matching(img1, img2, area_of_search=(32,32), block_size=(4,4), step
                     flow[i, j, 1] = best_dy
 
     return flow
+
+
+def smooth_flow(flow, sigma):
+    # Apply Gaussian smoothing to the flow vectors
+    flow_smooth = np.zeros_like(flow)
+    flow_smooth[..., 0] = cv2.GaussianBlur(flow[..., 0], (0, 0), sigma)
+    flow_smooth[..., 1] = cv2.GaussianBlur(flow[..., 1], (0, 0), sigma)
+
+    return flow_smooth
+
+
+def median_smoothing(flow, ksize=3):
+    """
+    Applies median filtering to the optical flow to reduce noise and improve accuracy.
+    Args:
+        flow: a 3D numpy array of size (h, w, 2), where the third dimension corresponds to the horizontal and vertical components of the optical flow vectors.
+        ksize: the size of the median filter kernel.
+
+    Returns:
+        A 3D numpy array of size (h, w, 2), where the third dimension corresponds to the horizontal and vertical components of the smoothed optical flow vectors.
+    """
+    h, w = flow.shape[:2]
+    smoothed_flow = np.zeros_like(flow)
+
+    # Pad the flow image with zeros
+    padded_flow = np.pad(flow, ((ksize//2, ksize//2), (ksize//2, ksize//2), (0,0)), mode='constant')
+
+    # Apply median filter to each pixel in the flow image
+    for y in range(ksize//2, h+ksize//2):
+        for x in range(ksize//2, w+ksize//2):
+            # Extract the kernel around the current pixel
+            kernel = padded_flow[y-ksize//2:y+ksize//2+1, x-ksize//2:x+ksize//2+1]
+
+            # Compute the median of the flow vectors in the kernel
+            median_flow = np.median(kernel, axis=(0,1))
+
+            # Store the smoothed flow vector for the current pixel
+            smoothed_flow[y-ksize//2, x-ksize//2] = median_flow
+
+    return smoothed_flow
+
+
+def block_matching(img1, img2, block_size, search_border, method, step=1):
+    h, w = img1.shape
+    of = np.zeros((h, w, 2), dtype=float)
+
+    # Iterate over rows with given step size
+    for i in tqdm(range(0, h - block_size, block_size)):
+        # Iterate over cols with given step size
+        for j in range(0, w - block_size, block_size):
+
+            # Crop reference block and target area to search
+            first_i = max(i - search_border, 0)
+            first_j = max(j - search_border, 0)
+            last_i = min(i + block_size + search_border, h)
+            last_j = min(j + block_size + search_border, w)
+            reference = img1[i: i + block_size, j: j + block_size]
+            area_of_search = img2[first_i: last_i, first_j:last_j]
+
+            # Initialize variables to hold minimum distance and its corresponding index
+            min_dist = np.inf
+            min_idx = None
+
+            # Search over blocks with given step size
+            for ii in range(0, area_of_search.shape[0] - block_size + 1, step):
+                for jj in range(0, area_of_search.shape[1] - block_size + 1, step):
+                    target = area_of_search[ii: ii + block_size, jj: jj + block_size]
+                    dist = compute_distance(reference, target, method)
+                    if dist < min_dist:
+                        min_dist = dist
+                        min_idx = (ii, jj)
+
+            # Save the optical flow (u and v)
+            of[i:i + block_size, j:j + block_size] = [min_idx[1] - (j - first_j), min_idx[0] - (i - first_i)]
+
+    return of

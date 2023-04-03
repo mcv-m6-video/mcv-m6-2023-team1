@@ -267,7 +267,7 @@ def mean_square_error(flow_gt, flow_pred):
     """
     Computes the mean square error between the ground truth and predicted optical flow
     """
-    error = np.linalg.norm(flow_gt - flow_pred) ** 2 / flow_gt.size
+    error = np.linalg.norm(flow_gt - flow_pred) ** 2 #/ flow_gt.size
     return error
 
 
@@ -296,3 +296,24 @@ def percentage_of_erroneous_pixels(flow_gt, flow_pred, threshold=3.0):
     num_pixels = flow_gt.shape[0] * flow_gt.shape[1]
     pepn = num_errors / num_pixels
     return pepn
+
+def ncc_error(block1, block2):
+    """
+    Computes the normalized cross-correlation (NCC) error between two blocks.
+    """
+    mean1, mean2 = np.mean(block1), np.mean(block2)
+    std1, std2 = np.std(block1), np.std(block2)
+    if std1 == 0 or std2 == 0:
+        return 0
+    else:
+        return np.mean((block1 - mean1) * (block2 - mean2) / (std1 * std2))
+
+def compute_distance(ref, target, method="SSD"):
+    if method == "SSD":
+        return np.sum((target - ref) ** 2)
+    if method == 'MSE':
+        return np.mean((target - ref) ** 2)
+    if method == "SAD":
+        return np.sum(np.abs(target - ref))
+    if method == 'MAD':
+        return np.mean(np.abs(target - ref))

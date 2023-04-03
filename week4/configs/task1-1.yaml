@@ -2,5 +2,6 @@ paths:
   kitti: '../dataset/results_opticalflow_kitti/results'
   gt: "D:/datasets_diskD/data_stereo_flow/training/flow_noc" #'../dataset/data_stereo_flow/training/flow_noc'
   block_matching: '../dataset/results_block_matching'
+  block_matching2: '../dataset/results_block_matching2'
   sequence45: "D:/datasets_diskD/data_stereo_flow/training/image_1"
 evaluate_own_OF: True

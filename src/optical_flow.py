@@ -1,9 +1,18 @@
-import os
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from src.metrics import mean_square_error, root_mean_square_error, mean_absolute_error, percentage_of_erroneous_pixels, ncc_error, compute_distance
+from src.metrics import mean_absolute_error, compute_distance
+
+def report_errors_OF(gt_path, seq_n, flow_det):
+    mask, flow_gt = read_optical_flow(f"{gt_path}/{seq_n}")
+    flow_noc_det = flow_det[mask]
+    flow_noc_gt = flow_gt[mask]
+    error = compute_error(flow_noc_gt, flow_noc_det)
+    msen = compute_msen(error)
+    pepn = compute_pepn(error)
+
+    return mask, error, msen, pepn
 
 
 def read_optical_flow(path: str) -> (np.ndarray, np.ndarray):

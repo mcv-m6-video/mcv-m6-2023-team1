@@ -15,12 +15,12 @@ from src.metrics import mean_square_error, root_mean_square_error, mean_absolute
 
 
 def main(cfg: Dict):
-    # area_of_search_range = [1, 2, 4, 8, 16, 32]
-    # block_size_range = [4, 8, 16, 32, 64]
-    # step_size_range = [1, 2, 4]
-    area_of_search_range = [32]
+    area_of_search_range = [64]
     block_size_range = [16]
-    step_size_range = [2]
+    step_size_range = [1]
+    # area_of_search_range = [32]
+    # block_size_range = [16]
+    # step_size_range = [2]
 
     best_area = None
     best_block = None

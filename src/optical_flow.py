@@ -136,8 +136,8 @@ def save_plot_OF(OF, path):
     mag, ang = cv2.cartToPolar(OF[:,:,0], OF[:,:,1])
     hsv = np.zeros((OF.shape[0], OF.shape[1], 3), dtype=np.uint8)
     hsv[..., 0] = ang * 180 / np.pi / 2
-    hsv[..., 1] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
-    hsv[..., 2] = 255
+    hsv[..., 2] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
+    hsv[..., 1] = 255
 
     # convert the HSV image to BGR for display and saving
     bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)

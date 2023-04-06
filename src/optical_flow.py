@@ -65,10 +65,12 @@ def visualize_error(error, mask):
     plt.show()
 
 def histogram_error(error):
-    plt.hist(error, bins=50)
+    plt.hist(error, bins=25)
     plt.title("Histogram of error for non-occluded areas")
     plt.xlabel("Squared error")
     plt.ylabel("Number of pixels")
+    plt.xlim(0, max(error))
+
     plt.show()
 
 

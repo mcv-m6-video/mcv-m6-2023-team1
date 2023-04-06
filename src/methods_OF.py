@@ -7,6 +7,8 @@ from src.metrics import mean_square_error
 
 MethodsFactory = {OFMethods.Farneback:cv2.calcOpticalFlowFarneback,
                     OFMethods.OwnBlockMatching: OF_block_matching}
+
+
 def evaluate_kitti_week_1(cfg):
     gt_path = cfg["paths"]["gt"]
     detections_path = cfg["paths"]["kitti"]

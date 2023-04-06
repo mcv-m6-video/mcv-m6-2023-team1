@@ -113,20 +113,20 @@ def extract_rectangles_from_xml_detection(path_to_xml_file):
         track_id = int(track.attrib["id"])
         # Loop through each 'box' element within the 'track' element to get the bounding box coordinates
         for box in track.findall(".//box"):
-            if box.attrib['occluded'] == '0':
-                # Extract the bounding box coordinates and the frame number
-                x1 = float(box.attrib['xtl'])
-                y1 = float(box.attrib['ytl'])
-                x2 = float(box.attrib['xbr'])
-                y2 = float(box.attrib['ybr'])
-                frame_num = f"f_{box.attrib['frame']}"
+            # if box.attrib['occluded'] == '0':
+            # Extract the bounding box coordinates and the frame number
+            x1 = float(box.attrib['xtl'])
+            y1 = float(box.attrib['ytl'])
+            x2 = float(box.attrib['xbr'])
+            y2 = float(box.attrib['ybr'])
+            frame_num = f"f_{box.attrib['frame']}"
 
-                # If the frame number doesn't exist in the dictionary yet, add it and initialize an empty list
-                if frame_num not in frame_dict:
-                    frame_dict[frame_num] = []
+            # If the frame number doesn't exist in the dictionary yet, add it and initialize an empty list
+            if frame_num not in frame_dict:
+                frame_dict[frame_num] = []
 
-                # Append the bounding box coordinates to the list for the current frame number
-                frame_dict[frame_num].append([track_id, label, x1, y1, x2, y2])
+            # Append the bounding box coordinates to the list for the current frame number
+            frame_dict[frame_num].append([track_id, label, x1, y1, x2, y2])
 
     return sort_dict(frame_dict)
 

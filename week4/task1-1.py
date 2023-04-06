@@ -4,6 +4,8 @@ from typing import Dict
 from src.utils import open_config_yaml
 from src.enums import OFMethods
 from src.methods_OF import evaluate_kitti_week_1, evaluate_methods_week4, evaluate_optimized_blockmatching
+
+
 def main(cfg: Dict):
 
     if not cfg["evaluate_own_OF"]:  # if false it will evaluate the kitti made on week1
@@ -12,6 +14,7 @@ def main(cfg: Dict):
         evaluate_optimized_blockmatching(cfg)
     else:  # Compute the optical flow with the block matching algorithm
        evaluate_methods_week4(cfg)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

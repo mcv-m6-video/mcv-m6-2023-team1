@@ -55,6 +55,7 @@ def save_results(bbox_preds, preds, gt_test_bboxes, test_imgs_paths, multiply255
         if take_one_sample:
            break
 
+
 def plot_frame(
         frame: str,
         gt_rects: List,

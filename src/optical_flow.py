@@ -44,11 +44,11 @@ def visualize_error(error, mask):
     error_image[mask] = error
     plt.imshow(error_image, cmap="hot")
     plt.title("Squared error")
+    plt.colorbar()
     plt.show()
 
-
 def histogram_error(error):
-    plt.hist(error)
+    plt.hist(error, bins=50)
     plt.title("Histogram of error for non-occluded areas")
     plt.xlabel("Squared error")
     plt.ylabel("Number of pixels")

@@ -1,21 +1,38 @@
-import os
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from src.metrics import mean_square_error, root_mean_square_error, mean_absolute_error, percentage_of_erroneous_pixels, ncc_error, compute_distance
+from src.metrics import mean_absolute_error, compute_distance
+
+def report_errors_OF(gt_path, seq_n, flow_det):
+    mask, flow_gt = read_optical_flow(f"{gt_path}/{seq_n}")
+    flow_noc_det = flow_det[mask]
+    flow_noc_gt = flow_gt[mask]
+    error = compute_error(flow_noc_gt, flow_noc_det)
+    msen = compute_msen(error)
+    pepn = compute_pepn(error)
+
+    return mask, error, msen, pepn
+
+
+def report_errors_OF_2(flow_gt, flow_det, mask):
+    flow_noc_det = flow_det[mask]
+    flow_noc_gt = flow_gt[mask]
+    error = compute_error(flow_noc_gt, flow_noc_det)
+    msen = compute_msen(error)
+    pepn = compute_pepn(error)
+
+    return error, msen, pepn
 
 
 def read_optical_flow(path: str) -> (np.ndarray, np.ndarray):
     flow = cv2.imread(path, cv2.IMREAD_UNCHANGED).astype("float32")
 
-    # flow without occlusions
-    new_flow = np.zeros((flow.shape[0], flow.shape[1], 2), dtype="float32")
-
     u_flow = (flow[:, :, 2] - 2 ** 15) / 64
     v_flow = (flow[:, :, 1] - 2 ** 15) / 64
     mask = flow[:, :, 0].astype('bool')
 
+    new_flow = np.zeros((flow.shape[0], flow.shape[1], 2), dtype="float32")
     new_flow[:, :, 0] = u_flow
     new_flow[:, :, 1] = v_flow
 
@@ -128,6 +145,36 @@ def draw_opt_flow_magnitude_and_direction(flow: np.ndarray):
     axs[0].imshow(magnitude, cmap='gray')
     axs[1].set_title('Optical Flow Direction')
     axs[1].imshow(direction)
+    plt.show()
+
+
+def draw_flow(img, flow, step=16):
+    h, w = img.shape[:2]
+    y, x = np.mgrid[step / 2:h:step, step / 2:w:step].reshape(2, -1).astype(int)
+    fx, fy = flow[y, x].T
+    lines = np.vstack([x, y, x + fx, y + fy]).T.reshape(-1, 2, 2)
+    lines = np.int32(lines + 0.5)
+    vis = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    cv2.polylines(vis, lines, 0, (0, 255, 0))
+    for (x1, y1), (_x2, _y2) in lines:
+        cv2.circle(vis, (x1, y1), 1, (0, 255, 0), -1)
+
+    plt.imshow(vis)
+    plt.show()
+
+
+def draw_hsv(flow, method, scale=4):
+    mag, ang = cv2.cartToPolar(flow[..., 0], flow[..., 1])
+    hsv = np.zeros((flow.shape[0], flow.shape[1], 3), np.uint8)
+    hsv[..., 0] = ang * (180 / np.pi / 2)
+    hsv[..., 1] = 255
+    hsv[..., 2] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
+    if method != 'pyflow':
+        # scales if not pyflow xq no se ve una kk
+        hsv[..., 2] = np.minimum(mag * scale, 255)
+    rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
+
+    plt.imshow(rgb)
     plt.show()
 
 

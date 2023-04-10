@@ -2,5 +2,5 @@ paths:
   gt: '../dataset/data_stereo_flow/training/flow_noc/000045_10.png'
   frame0: "../dataset/data_stereo_flow/training/image_0/000045_10.png"
   frame1: "../dataset/data_stereo_flow/training/image_0/000045_11.png"
-method: Franeback
+method: all
 

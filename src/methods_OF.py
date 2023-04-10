@@ -1,12 +1,71 @@
 import glob
 import cv2
+import numpy as np
 from .optical_flow import read_optical_flow, report_errors_OF, save_plot_OF, visualize_error, histogram_error
 from .optical_flow import OF_block_matching, block_matching, compute_error, compute_pepn, compute_msen
 from .enums import OFMethods
 from src.metrics import mean_square_error
+from PIL import Image
+# import pyflow
 
 MethodsFactory = {OFMethods.Farneback:cv2.calcOpticalFlowFarneback,
                     OFMethods.OwnBlockMatching: OF_block_matching}
+
+
+def of_perceiver(cfg):
+    from perceiver.model.vision.optical_flow import convert_config, OpticalFlow
+    from perceiver.data.vision.optical_flow import OpticalFlowProcessor
+    from transformers import AutoConfig
+    import torch
+
+    prev = cv2.imread(cfg["paths"]["frame0"])
+    post = cv2.imread(cfg["paths"]["frame1"])
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    # Load pretrained model configuration from the Hugging Face Hub
+    config = AutoConfig.from_pretrained("deepmind/optical-flow-perceiver")
+
+    # Convert configuration, instantiate model and load weights
+    model = OpticalFlow(convert_config(config)).eval().to(device)
+
+    # Create optical flow processor
+    processor = OpticalFlowProcessor(patch_size=tuple(config.train_size))
+
+    frame_pair = (prev, post)
+
+    optical_flow = processor.process(model, image_pairs=[frame_pair], batch_size=1, device=device).numpy()[0]
+
+    return optical_flow
+
+
+def of_pyflow(prev, post):
+    img1 = np.atleast_3d(prev.astype(float) / 255.)
+    img2 = np.atleast_3d(post.astype(float) / 255.)
+    u, v, im2W = pyflow.coarse2fine_flow(img1, img2, 0.012, 0.75, 20, 7, 1, 30, 1)
+    opflow = np.dstack((u, v))
+
+
+def of_lucas_kanade(prev, post):
+    # Parameters for lucas kanade optical flow
+    lk_params = dict(winSize=(15, 15),
+                     maxLevel=2,
+                     criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,
+                               10, 0.03))
+    # Track all features of image
+    p0 = np.array([[x, y] for y in range(prev.shape[0]) for x in range(prev.shape[1])], dtype=np.float32).reshape(
+        (-1, 1, 2))
+
+    p1, st, err = cv2.calcOpticalFlowPyrLK(prev, post, p0, None, **lk_params)
+
+    p0 = p0.reshape((prev.shape[0], prev.shape[1], 2))
+    p1 = p1.reshape((prev.shape[0], prev.shape[1], 2))
+    st = st.reshape((prev.shape[0], prev.shape[1]))
+
+    opflow = p1 - p0
+    opflow[st == 0] = 0
+
+    return opflow
 
 
 def evaluate_kitti_week_1(cfg):

@@ -42,6 +42,35 @@ def extract_rectangles_from_csv(path):
 
     return sort_dict(ret_dict)
 
+def extract_rectangles_from_txt_gt(path):
+    """
+    Parses an XML annotation file in the csv format and extracts bounding box coordinates for cars in each frame.
+
+    Args:
+        - Path to annotation csv in AI City format
+    returns:
+        dict[frame_num] = [[x1, y1, x2, y2, score], [x1, y1, x2, y2, score], ...]
+        in top left and bottom right coordinates
+    """
+    ret_dict = {}
+
+    with open(path, 'r') as f:
+        reader = csv.reader(f, delimiter=',')
+        # next(reader)  # skip header row
+
+        for row in reader:
+            frame_num = f'f_{int(row[0]) - 1}'
+
+            if frame_num not in ret_dict:
+                ret_dict[frame_num] = []
+
+            # convert from center, width, height to top left, bottom right
+            ret_dict[frame_num].append(
+                [float(row[2]), float(row[3]), float(row[4]), float(row[5]),
+                 float(row[6])]
+            )
+
+    return sort_dict(ret_dict)
 
 def extract_rectangles_from_xml(path_to_xml_file, add_track_id=False, removed_parked=False):
     """
@@ -294,6 +323,8 @@ def get_frames_paths_from_folder(input_path: str) -> np.ndarray:
                    os.path.isfile(os.path.join(input_path, f)) and f.endswith('.jpg')]
     image_files.sort()
     return np.array(image_files)
+
+
 
 def get_bbox_optical_flows_from_folder(bboxes:np.array, input_path: str) -> np.ndarray:
     """

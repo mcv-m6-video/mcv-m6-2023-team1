@@ -218,11 +218,12 @@ def extract_not_parked_rectangles_from_xml(path_to_xml_file):
     return sort_dict(frame_dict)
 
 
-def extract_frames_from_video(video_path: str, output_path: str) -> None:
+def extract_frames_from_video(video_path: str, output_path: str, camera: str = 'frame') -> None:
     """
     Extract frames from a video and save them to a directory.
     :param video_path: path to the video
     :param output_path: path to the output directory
+    :param camera: used camera, default 'frame'
     """
     # Create the output directory if it doesn't exist
     if not os.path.exists(output_path):
@@ -237,7 +238,7 @@ def extract_frames_from_video(video_path: str, output_path: str) -> None:
         ret, frame = video_capture.read()
         if not ret:
             break
-        output_frame_path = os.path.join(output_path, f"frame_{frame_count:04d}.jpg")
+        output_frame_path = os.path.join(output_path, f"{camera}_{frame_count:04d}.jpg")
         cv2.imwrite(output_frame_path, frame)
         frame_count += 1
     video_capture.release()

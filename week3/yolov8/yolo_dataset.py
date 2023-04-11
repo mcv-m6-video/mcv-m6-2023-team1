@@ -11,7 +11,7 @@ def coco_to_yolo(x1, y1, w, h, image_w, image_h):
     return [((2*x1 + w)/(2*image_w)) , ((2*y1 + h)/(2*image_h)), w/image_w, h/image_h]
 
 
-def generate_rectangles_yolo(rectangles_dict, dataset_path):
+def generate_rectangles_yolo(rectangles_dict, dataset_path, camera: str = 'frame'):
     voc_to_yolo_labels = {
         "car": 0,
         "bike": 1
@@ -19,7 +19,7 @@ def generate_rectangles_yolo(rectangles_dict, dataset_path):
     img_width = 1920
     img_height = 1080
     for frame, rectangles in tqdm(rectangles_dict.items()):
-        with open(f'{dataset_path}/frame_{str(frame).zfill(4)}.txt', 'w') as f:
+        with open(f'{dataset_path}/{camera}_{str(frame).zfill(4)}.txt', 'w') as f:
             for rectangle in rectangles:
                 label = rectangle[1]
                 label_id = voc_to_yolo_labels[label]

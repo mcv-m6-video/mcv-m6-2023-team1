@@ -243,7 +243,7 @@ def extract_frames_from_video(video_path: str, output_path: str, camera: str = '
         frame_count += 1
     video_capture.release()
 
-def extract_of_from_dataset(dataset: list, output_path: str) -> None:
+def extract_of_from_dataset(dataset: list, output_path: str, of_method:str) -> None:
     """
     Extract frames from a video and save them to a directory.
     :param video_path: path to the video
@@ -257,23 +257,31 @@ def extract_of_from_dataset(dataset: list, output_path: str) -> None:
         return
 
     for num_frame in range(len(dataset)-1):
-        prev = plt.imread(dataset[num_frame][1])
-        post = plt.imread(dataset[num_frame+1][1])
+        if of_method=='perceiver':
+            prev = plt.imread(dataset[num_frame][1])
+            post = plt.imread(dataset[num_frame+1][1])
 
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+            device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        # Load pretrained model configuration from the Hugging Face Hub
-        config = AutoConfig.from_pretrained("deepmind/optical-flow-perceiver")
+            # Load pretrained model configuration from the Hugging Face Hub
+            config = AutoConfig.from_pretrained("deepmind/optical-flow-perceiver")
 
-        # Convert configuration, instantiate model and load weights
-        model = OpticalFlow(convert_config(config)).eval().to(device)
+            # Convert configuration, instantiate model and load weights
+            model = OpticalFlow(convert_config(config)).eval().to(device)
 
-        # Create optical flow processor
-        processor = OpticalFlowProcessor(patch_size=tuple(config.train_size))
+            # Create optical flow processor
+            processor = OpticalFlowProcessor(patch_size=tuple(config.train_size))
 
-        frame_pair = (np.resize(prev,(368,496,3)), np.resize(post,(368,496,3)))
+            frame_pair = (np.resize(prev,(368,496,3)), np.resize(post,(368,496,3)))
 
-        optical_flow = processor.process(model, image_pairs=[frame_pair], batch_size=1, device=device).numpy()[0]
+            optical_flow = processor.process(model, image_pairs=[frame_pair], batch_size=1, device=device).numpy()[0]
+
+        if of_method=='farneback':
+            prev = cv2.imread(dataset[num_frame][1], cv2.IMREAD_GRAYSCALE)
+            post = cv2.imread(dataset[num_frame + 1][1], cv2.IMREAD_GRAYSCALE)
+            #Following line to use farneback
+            optical_flow = cv2.calcOpticalFlowFarneback(prev, post, None, 0.5, 3, 15, 3, 5, 1.2, 0)
+
         with open(os.path.join(output_path,f"{num_frame}-{num_frame+1}.npy"), "wb") as file:
             np.save(file,optical_flow, allow_pickle=True)
 

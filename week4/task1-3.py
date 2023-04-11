@@ -11,7 +11,7 @@ import cv2
 
 def save_results_to_MOTS(tracks,  cfg):
 
-    overlap_OF_path = "data/trackers/mot_challenge/week3-train/overlap_OF/data/Seq03.txt"
+    overlap_OF_path = "data/trackers/mot_challenge/week3-train/overlap_OF_farneback/data/Seq03.txt"
     output_paths = [overlap_OF_path]
     for track, output_path in zip(tracks, output_paths):
         write_PASCAL_to_MOT_txt(track, output_path)
@@ -243,7 +243,7 @@ def main(cfg):
     bboxes = resize_bboxes(bboxes)
     dataset = dataset[int(len(dataset) * 0.25):]
     print("Number of frames: ", len(dataset))
-    extract_of_from_dataset(dataset, paths["extracted_optical_flows_path"])
+    extract_of_from_dataset(dataset, paths["extracted_optical_flows_path"], model_cfg["of_method"])
     optical_flows = get_bbox_optical_flows_from_folder(bboxes, paths["extracted_optical_flows_path"])
 
     track_bbs_ids_overlap = task1_3(

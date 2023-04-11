@@ -7,7 +7,10 @@ import cv2
 import numpy as np
 from tqdm import tqdm
 from src.utils import sort_dict
-
+from perceiver.model.vision.optical_flow import convert_config, OpticalFlow
+from perceiver.data.vision.optical_flow import OpticalFlowProcessor
+from transformers import AutoConfig
+import torch
 
 def extract_rectangles_from_csv(path):
     """
@@ -239,6 +242,40 @@ def extract_frames_from_video(video_path: str, output_path: str) -> None:
         frame_count += 1
     video_capture.release()
 
+def extract_of_from_dataset(dataset: list, output_path: str) -> None:
+    """
+    Extract frames from a video and save them to a directory.
+    :param video_path: path to the video
+    :param output_path: path to the output directory
+    """
+    # Create the output directory if it doesn't exist
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+    elif len(os.listdir(output_path)) > 0:
+        print(f"Output directory {output_path} already exists and has content. Skipping extraction.")
+        return
+
+    for num_frame in range(len(dataset)-1):
+        prev = plt.imread(dataset[num_frame][1])
+        post = plt.imread(dataset[num_frame+1][1])
+
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        # Load pretrained model configuration from the Hugging Face Hub
+        config = AutoConfig.from_pretrained("deepmind/optical-flow-perceiver")
+
+        # Convert configuration, instantiate model and load weights
+        model = OpticalFlow(convert_config(config)).eval().to(device)
+
+        # Create optical flow processor
+        processor = OpticalFlowProcessor(patch_size=tuple(config.train_size))
+
+        frame_pair = (np.resize(prev,(368,496,3)), np.resize(post,(368,496,3)))
+
+        optical_flow = processor.process(model, image_pairs=[frame_pair], batch_size=1, device=device).numpy()[0]
+        with open(os.path.join(output_path,f"{num_frame}-{num_frame+1}.npy"), "wb") as file:
+            np.save(file,optical_flow, allow_pickle=True)
+
 
 def get_frames_paths_from_folder(input_path: str) -> np.ndarray:
     """
@@ -248,6 +285,24 @@ def get_frames_paths_from_folder(input_path: str) -> np.ndarray:
                    os.path.isfile(os.path.join(input_path, f)) and f.endswith('.jpg')]
     image_files.sort()
     return np.array(image_files)
+
+def get_bbox_optical_flows_from_folder(bboxes:np.array, input_path: str) -> np.ndarray:
+    """
+    Loads optical flows and returns the mean value for the x and y components for the area of the bbox previouslt detected
+
+    """
+    numpy_files = [os.path.join(input_path, f) for f in os.listdir(input_path) if
+                   os.path.isfile(os.path.join(input_path, f)) and f.endswith('.npy')]
+    numpy_files.sort()
+    optical_flows = []
+    for numpy_file, frame_bboxes in zip(numpy_files, bboxes[1:]):
+        frame_optical_flows = []
+        for bbox in frame_bboxes:
+            bbox_of = np.load(numpy_file, allow_pickle=True)[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+            frame_optical_flows.append([np.mean(bbox_of[:,:,0]),np.mean(bbox_of[:,:,1])])
+        optical_flows.append(frame_optical_flows)
+    return optical_flows
+
 
 
 def load_images(paths_to_images: List[str], grayscale: bool = True) -> np.ndarray:

@@ -1,5 +1,6 @@
 import numpy as np
-from src.in_out import extract_frames_from_video, get_frames_paths_from_folder, extract_rectangles_from_xml, extract_of_from_dataset, get_bbox_optical_flows_from_folder
+from src.in_out import extract_frames_from_video, get_frames_paths_from_folder, extract_rectangles_from_xml, \
+    extract_of_from_dataset, get_bbox_optical_flows_from_folder
 from tqdm import tqdm
 from src.utils import open_config_yaml, load_bboxes_from_file, draw_img_with_ids, draw_bboxes_trajectory
 import argparse
@@ -9,12 +10,14 @@ from src.metrics import get_IoU
 import os
 import cv2
 
-def save_results_to_MOTS(tracks,  cfg):
 
+def save_results_to_MOTS(tracks, cfg):
     overlap_OF_path = "data/trackers/mot_challenge/week3-train/overlap_OF_farneback/data/Seq03.txt"
     output_paths = [overlap_OF_path]
     for track, output_path in zip(tracks, output_paths):
         write_PASCAL_to_MOT_txt(track, output_path)
+
+
 def draw_bboxes_and_trajectory(first_frame, last_frame, viz_config, track_bbs_ids, dataset, out_path):
     # Draw the bounding boxes and the trajectory
     overlay = np.zeros_like(cv2.imread(dataset[0][1]))
@@ -43,28 +46,32 @@ def draw_bboxes_and_trajectory(first_frame, last_frame, viz_config, track_bbs_id
                 cv2.imwrite(os.path.join(out_path, str(i) + '.png'), img_out,
                             [int(cv2.IMWRITE_PNG_COMPRESSION), 9])
 
+
 def resize_bboxes(bboxes):
     resized_bboxes = []
     for frame_bboxes in bboxes:
         resized_frame_bboxes = []
         for bbox in frame_bboxes:
-            x1 = bbox[0]*496/1920
-            y1 = bbox[1]*368/1080
-            x2 = bbox[2]*496/1920
-            y2 = bbox[3]*368/1080
-            resized_frame_bboxes.append([int(x1),int(y1),int(x2),int(y2),bbox[4]])
+            x1 = bbox[0] * 496 / 1920
+            y1 = bbox[1] * 368 / 1080
+            x2 = bbox[2] * 496 / 1920
+            y2 = bbox[3] * 368 / 1080
+            resized_frame_bboxes.append([int(x1), int(y1), int(x2), int(y2), bbox[4]])
         resized_bboxes.append(resized_frame_bboxes)
     return resized_bboxes
+
 
 def resize_track_bboxes(tracks):
     resized_tracks = []
     for track in tracks:
-            track[:,0] = track[:,0]*1920/496
-            track[:,1] = track[:,1]*1080/368
-            track[:,2] = track[:,2]*1920/496
-            track[:,3] = track[:,3]*1080/368
-            resized_tracks.append(track)
+        track[:, 0] = track[:, 0] * 1920 / 496
+        track[:, 1] = track[:, 1] * 1080 / 368
+        track[:, 2] = track[:, 2] * 1920 / 496
+        track[:, 3] = track[:, 3] * 1080 / 368
+        resized_tracks.append(track)
     return resized_tracks
+
+
 class MOTTrackerOverlapOpticalFlow():
     """
     This class implements a simple tracker based on detection overlap.
@@ -146,11 +153,12 @@ class MOTTrackerOverlapOpticalFlow():
         return np.array(updated_dets)
 
     @staticmethod
-    def _compute_expected_bbox_withOF(bbox:np.ndarray, flow:np.ndarray):
-        return np.array([bbox[0]-flow[0],
-                         bbox[1]-flow[1],
-                         bbox[2]-flow[0],
-                         bbox[3]-flow[1]])
+    def _compute_expected_bbox_withOF(bbox: np.ndarray, flow: np.ndarray):
+        return np.array([bbox[0] - flow[0],
+                         bbox[1] - flow[1],
+                         bbox[2] - flow[0],
+                         bbox[3] - flow[1]])
+
     @staticmethod
     def _compute_overlap(det1: List, det2: List) -> float:
         """
@@ -170,21 +178,24 @@ def write_PASCAL_to_MOT_txt(track, output_path):
         for frame, frame_track in enumerate(tqdm(track)):
             for ann in frame_track:
                 x1, y1, x2, y2, track_id = ann
-                w = x2-x1
-                h = y2-y1
-                file.write(f"{536+frame},{track_id+1},{x1},{y1},{w},{h},1,-1,-1,-1\n")
+                w = x2 - x1
+                h = y2 - y1
+                file.write(f"{536 + frame},{track_id + 1},{x1},{y1},{w},{h},1,-1,-1,-1\n")
+
 
 def write_gt_to_MOT_txt(track, output_path):
     if not os.path.exists(output_path):
         os.makedirs(output_path)
     with open(output_path, "w") as file:
-        for frame, frame_track in zip(list(track.keys()),list(track.values())):
+        for frame, frame_track in zip(list(track.keys()), list(track.values())):
             for ann in frame_track:
                 x1, y1, x2, y2, track_id = ann
-                w = x2-x1
-                h = y2-y1
-                file.write(f"{frame+1},{track_id+1},{x1},{y1},{w},{h},1,-1,-1,-1\n")
-def task1_3(out_path, dataset, bboxes,optical_flows, first_frame, last_frame, visualization_cfg):
+                w = x2 - x1
+                h = y2 - y1
+                file.write(f"{frame + 1},{track_id + 1},{x1},{y1},{w},{h},1,-1,-1,-1\n")
+
+
+def task1_3(out_path, dataset, bboxes, optical_flows, first_frame, last_frame, visualization_cfg):
     """
     This task consist on implementing tracking using detection overlap on top of a given detections.
 
@@ -208,13 +219,15 @@ def task1_3(out_path, dataset, bboxes,optical_flows, first_frame, last_frame, vi
         if not first_iteration_done:
             track_bbs_ids.append(mot_tracker_overlap.update(np.array(frame_bboxes)))
         else:
-            track_bbs_ids.append(mot_tracker_overlap.update_with_optical_flows(np.array(frame_bboxes), np.array(optical_flows[num_frame-1])))
+            track_bbs_ids.append(mot_tracker_overlap.update_with_optical_flows(np.array(frame_bboxes),
+                                                                               np.array(optical_flows[num_frame - 1])))
         first_iteration_done = True
     track_bbs_ids = resize_track_bboxes(track_bbs_ids)
     # Draw the bounding boxes and the trajectory
     if visualization_cfg:
         draw_bboxes_and_trajectory(first_frame, last_frame, visualization_cfg, track_bbs_ids, dataset, out_path)
     return track_bbs_ids
+
 
 def main(cfg):
     paths = cfg["paths"]
@@ -232,18 +245,16 @@ def main(cfg):
     else:
         bboxes = load_bboxes_from_file(paths['detected_bboxes'])
     if model_cfg['save_gt_tracking_MOT']:
-        write_gt_to_MOT_txt(dict(zip(frames, bboxes)), output_path = "data/gt/mot_challenge/week4-train/Seq03/gt/gt.txt")
+        write_gt_to_MOT_txt(dict(zip(frames, bboxes)), output_path="data/gt/mot_challenge/week4-train/Seq03/gt/gt.txt")
 
     # Obtain all frames of the sequence
     extract_frames_from_video(video_path=paths["video"], output_path=paths["extracted_frames"])
     frames = get_frames_paths_from_folder(input_path=paths["extracted_frames"])
     dataset = [(key, frames[key]) for key in gt_labels.keys()]
 
-
-
     # keep only frames of selected range
-    #dataset = dataset[int(len(dataset) * 0.25):int(len(dataset) * 0.25)+10]
-    #bboxes = bboxes[int(len(dataset) * 0.25):int(len(dataset) * 0.25)+10]
+    # dataset = dataset[int(len(dataset) * 0.25):int(len(dataset) * 0.25)+10]
+    # bboxes = bboxes[int(len(dataset) * 0.25):int(len(dataset) * 0.25)+10]
     bboxes = resize_bboxes(bboxes)
     dataset = dataset[int(len(dataset) * 0.25):]
     print("Number of frames: ", len(dataset))
@@ -260,9 +271,8 @@ def main(cfg):
         visualization_cfg=visualization_cfg
     )
 
-
     if not model_cfg["use_gt"]:
-        save_results_to_MOTS([track_bbs_ids_overlap],model_cfg)
+        save_results_to_MOTS([track_bbs_ids_overlap], model_cfg)
 
 
 if __name__ == "__main__":

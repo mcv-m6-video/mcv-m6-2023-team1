@@ -8,9 +8,11 @@ from src.in_out import extract_frames_from_video, get_frames_paths_from_folder, 
     get_bbox_optical_flows_from_folder
 from src.utils import open_config_yaml, load_bboxes_from_file
 from week3.task2 import write_gt_to_MOT_txt, MOTTrackerOverlap, write_PASCAL_to_MOT_txt, task2_2, \
-    draw_bboxes_and_trajectory
+    draw_bboxes_and_trajectory, write_PASCAL_to_MOT_txt_w4
 
-from task1_3 import task1_3,resize_bboxes
+from task1_3 import task1_3, resize_bboxes
+
+
 def get_overlap_track(out_path, dataset, bboxes, first_frame, last_frame, visualization_cfg):
     """
     This task consist on implementing tracking using detection overlap on top of a given detections.
@@ -26,22 +28,27 @@ def get_overlap_track(out_path, dataset, bboxes, first_frame, last_frame, visual
 
     track_bbs_ids = []
     # update SORT
-    for frame_bboxes in bboxes:
+    for bboxes_key, frame in dataset:
         # np array where each row contains a valid bounding box and track_id (last column)
-        if len(frame_bboxes[0]) == 5:
-            for i in range(len(frame_bboxes)):
-                frame_bboxes[i] = frame_bboxes[i][:-1]
-        track_bbs_ids.append(mot_tracker_overlap.update(np.array(frame_bboxes)))
+        if bboxes_key is not None:
+            frame_bboxes = bboxes[bboxes_key]
+            if len(frame_bboxes[0]) == 5:
+                for i in range(len(frame_bboxes)):
+                    frame_bboxes[i] = frame_bboxes[i][:-1]
+            track_bbs_ids.append(mot_tracker_overlap.update(np.array(frame_bboxes)))
+        else:
+            track_bbs_ids.append(mot_tracker_overlap.update(np.array([])))
 
     # Draw the bounding boxes and the trajectory
+    """
     if visualization_cfg:
         draw_bboxes_and_trajectory(first_frame, last_frame, visualization_cfg, track_bbs_ids, dataset, out_path)
+    """
     return track_bbs_ids
 
 
 def save_track(track: np.ndarray, track_path: str) -> None:
-    #track_path = "data/trackers/mot_challenge/week3-train/overlap/data/Seq03.txt"  # hardcoded so far
-    write_PASCAL_to_MOT_txt(track, track_path)
+    write_PASCAL_to_MOT_txt_w4(track, track_path)
 
 
 def main(cfg):
@@ -49,12 +56,20 @@ def main(cfg):
     model_cfg = cfg["model"]
     visualization_cfg = cfg["visualization"]
 
-    #bboxes = extract_rectangles_from_csv(paths['detected_bboxes'])
-    bboxes = extract_rectangles_from_csv(paths['annotations'])
-
     frames = get_frames_paths_from_folder(input_path=paths["extracted_frames"])
-    dataset = [(key, frames[key]) for key in bboxes.keys()]
-    bboxes = list(bboxes.values())
+
+    if cfg['use_gt_bboxes']:
+        bboxes = extract_rectangles_from_csv(paths['annotations'])
+    else:
+        bboxes = extract_rectangles_from_csv(paths['detected_bboxes'])
+
+    dataset = []
+    for f_id, frame in enumerate(frames):
+        dataset_tuple = (None, frame)
+        if f_id in bboxes:
+            dataset_tuple = (f_id, frame)
+        dataset.append(dataset_tuple)
+
     print("Number of frames: ", len(dataset))
     if model_cfg["use_OF"]:
         bboxes = resize_bboxes(bboxes)
@@ -81,8 +96,6 @@ def main(cfg):
         )
     if model_cfg["save_tracking_MOT"]:
         save_track(track_bbs_ids_overlap, paths['output'])
-
-
 
 
 if __name__ == "__main__":

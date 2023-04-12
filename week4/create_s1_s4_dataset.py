@@ -17,6 +17,7 @@ def extract_yolo_annots_from_txt(annot_path: str, dataset_path: str, camera: str
     with open(annot_path, "r") as f:
         for line in f:
             frame, track_id, x1, y1, h, w, class_id, _, _, _ = map(int, line.strip().split(","))
+            frame -= 1
             class_id = txt_to_voc_labels[class_id]
             if frame not in rectangles_by_frame:
                 rectangles_by_frame[frame] = []

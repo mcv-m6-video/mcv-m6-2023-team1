@@ -12,6 +12,7 @@ from perceiver.data.vision.optical_flow import OpticalFlowProcessor
 from transformers import AutoConfig
 import torch
 
+
 def extract_rectangles_from_csv(path):
     """
     Parses an XML annotation file in the csv format and extracts bounding box coordinates for cars in each frame.
@@ -41,6 +42,7 @@ def extract_rectangles_from_csv(path):
             )
 
     return sort_dict(ret_dict)
+
 
 def extract_rectangles_from_txt_gt(path):
     """
@@ -72,6 +74,7 @@ def extract_rectangles_from_txt_gt(path):
 
     return sort_dict(ret_dict)
 
+
 def extract_rectangles_from_xml(path_to_xml_file, add_track_id=False, removed_parked=False):
     """
     Parses an XML annotation file in the Pascal VOC format and extracts bounding box coordinates for cars in each frame.
@@ -97,7 +100,7 @@ def extract_rectangles_from_xml(path_to_xml_file, add_track_id=False, removed_pa
         # Loop through each 'box' element within the 'track' element to get the bounding box coordinates
         for box, attribute in zip(track.findall(".//box"), track.findall(".//attribute")):
 
-            if removed_parked and attribute.text=="true":
+            if removed_parked and attribute.text == "true":
                 continue
             else:
                 # Extract the bounding box coordinates and the frame number
@@ -161,6 +164,7 @@ def extract_rectangles_from_xml_detection(path_to_xml_file):
             frame_dict[frame_num].append([track_id, label, x1, y1, x2, y2])
 
     return sort_dict(frame_dict)
+
 
 def extract_rectangles_from_xml_detection_justbboxes(path_to_xml_file):
     """
@@ -272,7 +276,8 @@ def extract_frames_from_video(video_path: str, output_path: str, camera: str = '
         frame_count += 1
     video_capture.release()
 
-def extract_of_from_dataset(dataset: list, output_path: str, of_method:str) -> None:
+
+def extract_of_from_dataset(dataset: list, output_path: str, of_method: str) -> None:
     """
     Extract frames from a video and save them to a directory.
     :param video_path: path to the video
@@ -285,10 +290,10 @@ def extract_of_from_dataset(dataset: list, output_path: str, of_method:str) -> N
         print(f"Output directory {output_path} already exists and has content. Skipping extraction.")
         return
 
-    for num_frame in range(len(dataset)-1):
-        if of_method=='perceiver':
+    for num_frame in range(len(dataset) - 1):
+        if of_method == 'perceiver':
             prev = plt.imread(dataset[num_frame][1])
-            post = plt.imread(dataset[num_frame+1][1])
+            post = plt.imread(dataset[num_frame + 1][1])
 
             device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -301,18 +306,18 @@ def extract_of_from_dataset(dataset: list, output_path: str, of_method:str) -> N
             # Create optical flow processor
             processor = OpticalFlowProcessor(patch_size=tuple(config.train_size))
 
-            frame_pair = (np.resize(prev,(368,496,3)), np.resize(post,(368,496,3)))
+            frame_pair = (np.resize(prev, (368, 496, 3)), np.resize(post, (368, 496, 3)))
 
             optical_flow = processor.process(model, image_pairs=[frame_pair], batch_size=1, device=device).numpy()[0]
 
-        if of_method=='farneback':
+        if of_method == 'farneback':
             prev = cv2.imread(dataset[num_frame][1], cv2.IMREAD_GRAYSCALE)
             post = cv2.imread(dataset[num_frame + 1][1], cv2.IMREAD_GRAYSCALE)
-            #Following line to use farneback
+            # Following line to use farneback
             optical_flow = cv2.calcOpticalFlowFarneback(prev, post, None, 0.5, 3, 15, 3, 5, 1.2, 0)
 
-        with open(os.path.join(output_path,f"{num_frame}-{num_frame+1}.npy"), "wb") as file:
-            np.save(file,optical_flow, allow_pickle=True)
+        with open(os.path.join(output_path, f"{num_frame}-{num_frame + 1}.npy"), "wb") as file:
+            np.save(file, optical_flow, allow_pickle=True)
 
 
 def get_frames_paths_from_folder(input_path: str) -> np.ndarray:
@@ -325,8 +330,7 @@ def get_frames_paths_from_folder(input_path: str) -> np.ndarray:
     return np.array(image_files)
 
 
-
-def get_bbox_optical_flows_from_folder(bboxes:np.array, input_path: str) -> np.ndarray:
+def get_bbox_optical_flows_from_folder(bboxes: np.array, input_path: str) -> np.ndarray:
     """
     Loads optical flows and returns the mean value for the x and y components for the area of the bbox previouslt detected
 
@@ -340,10 +344,9 @@ def get_bbox_optical_flows_from_folder(bboxes:np.array, input_path: str) -> np.n
         for bbox in frame_bboxes:
             bbox_of = np.load(numpy_file, allow_pickle=True)
             bbox_of = bbox_of[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2])]
-            frame_optical_flows.append([np.mean(bbox_of[:,:,0]),np.mean(bbox_of[:,:,1])])
+            frame_optical_flows.append([np.mean(bbox_of[:, :, 0]), np.mean(bbox_of[:, :, 1])])
         optical_flows.append(frame_optical_flows)
     return optical_flows
-
 
 
 def load_images(paths_to_images: List[str], grayscale: bool = True) -> np.ndarray:
@@ -357,11 +360,13 @@ def load_images(paths_to_images: List[str], grayscale: bool = True) -> np.ndarra
     for path in tqdm(paths_to_images):
         images.append(cv2.imread(path, cv2.IMREAD_GRAYSCALE if grayscale else cv2.IMREAD_COLOR))
     return np.array(images)
+
+
 def plot_3d_scatter(map_values, alpha_values, rho_values):
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
 
-    ax.scatter(alpha_values,rho_values, map_values)
+    ax.scatter(alpha_values, rho_values, map_values)
 
     ax.set_xlabel('Alpha')
     ax.set_ylabel('Rho')

@@ -1,3 +1,5 @@
+import cv2
+
 from src.in_out import extract_rectangles_from_xml_detection, extract_frames_from_video
 from tqdm import tqdm
 import glob
@@ -16,8 +18,9 @@ def generate_rectangles_yolo(rectangles_dict, dataset_path, camera: str = 'frame
         "car": 0,
         "bike": 1
     }
-    img_width = 1920
-    img_height = 1080
+    img_path = f'{dataset_path}/{camera}_0000.jpg'
+    img = cv2.imread(img_path)
+    img_height, img_width, _ = img.shape
     for frame, rectangles in tqdm(rectangles_dict.items()):
         with open(f'{dataset_path}/{camera}_{str(frame).zfill(4)}.txt', 'w') as f:
             for rectangle in rectangles:

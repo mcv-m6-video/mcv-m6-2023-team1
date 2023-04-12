@@ -1,8 +1,9 @@
 model:
-  use_gt: False
+  use_OF: True
   first_frame: 0
   last_frame: 400
-  save_gt_tracking_MOT: False
+  save_tracking_MOT: False
+  of_method: "farneback"
 visualization:
   show_detection: True
   save: False
@@ -12,4 +13,5 @@ paths:
   video: '../dataset/aic19-track1-mtmc-train/train/S03/c011/vdo.avi'
   extracted_frames: '../dataset/w4_frames/SO3/c011'
   detected_bboxes: '../dataset/aic19-track1-mtmc-train/train/S03/c011/det/det_yolo3.txt'
-  output: '../output/task2/YOLOv3_S03'
+  output: '../output/w4/task2/YOLOv3_S03/c011_OF.txt'
+  extracted_optical_flows_path: '../dataset/optical_flows_farneback'

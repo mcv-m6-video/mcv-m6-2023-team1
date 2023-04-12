@@ -164,6 +164,8 @@ class MOTTrackerOverlapOpticalFlow():
 
 
 def write_PASCAL_to_MOT_txt(track, output_path):
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
     with open(output_path, "w") as file:
         for frame, frame_track in enumerate(tqdm(track)):
             for ann in frame_track:
@@ -173,6 +175,8 @@ def write_PASCAL_to_MOT_txt(track, output_path):
                 file.write(f"{536+frame},{track_id+1},{x1},{y1},{w},{h},1,-1,-1,-1\n")
 
 def write_gt_to_MOT_txt(track, output_path):
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
     with open(output_path, "w") as file:
         for frame, frame_track in zip(list(track.keys()),list(track.values())):
             for ann in frame_track:
@@ -208,8 +212,8 @@ def task1_3(out_path, dataset, bboxes,optical_flows, first_frame, last_frame, vi
         first_iteration_done = True
     track_bbs_ids = resize_track_bboxes(track_bbs_ids)
     # Draw the bounding boxes and the trajectory
-    draw_bboxes_and_trajectory(first_frame, last_frame, visualization_cfg, track_bbs_ids, dataset, out_path)
-
+    if visualization_cfg:
+        draw_bboxes_and_trajectory(first_frame, last_frame, visualization_cfg, track_bbs_ids, dataset, out_path)
     return track_bbs_ids
 
 def main(cfg):
@@ -263,7 +267,7 @@ def main(cfg):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default="week4/configs/task1-3.yaml")
+    parser.add_argument("--config", default="configs/task1-3.yaml")
     # parser.add_argument("--config", default="week3/configs/task1-3.yaml") #comment if you are not using VSCode
     args = parser.parse_args(sys.argv[1:])
 

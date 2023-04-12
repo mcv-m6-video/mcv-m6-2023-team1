@@ -338,7 +338,8 @@ def get_bbox_optical_flows_from_folder(bboxes:np.array, input_path: str) -> np.n
     for numpy_file, frame_bboxes in zip(numpy_files, bboxes[1:]):
         frame_optical_flows = []
         for bbox in frame_bboxes:
-            bbox_of = np.load(numpy_file, allow_pickle=True)[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+            bbox_of = np.load(numpy_file, allow_pickle=True)
+            bbox_of = bbox_of[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2])]
             frame_optical_flows.append([np.mean(bbox_of[:,:,0]),np.mean(bbox_of[:,:,1])])
         optical_flows.append(frame_optical_flows)
     return optical_flows

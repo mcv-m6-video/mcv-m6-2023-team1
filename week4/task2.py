@@ -4,12 +4,13 @@ import sys
 import numpy as np
 
 from src.in_out import extract_frames_from_video, get_frames_paths_from_folder, extract_rectangles_from_xml, \
-    extract_rectangles_from_csv, extract_rectangles_from_txt_gt
+    extract_rectangles_from_csv, extract_rectangles_from_txt_gt, extract_of_from_dataset, \
+    get_bbox_optical_flows_from_folder
 from src.utils import open_config_yaml, load_bboxes_from_file
 from week3.task2 import write_gt_to_MOT_txt, MOTTrackerOverlap, write_PASCAL_to_MOT_txt, task2_2, \
     draw_bboxes_and_trajectory
 
-
+from task1_3 import task1_3,resize_bboxes
 def get_overlap_track(out_path, dataset, bboxes, first_frame, last_frame, visualization_cfg):
     """
     This task consist on implementing tracking using detection overlap on top of a given detections.
@@ -33,13 +34,13 @@ def get_overlap_track(out_path, dataset, bboxes, first_frame, last_frame, visual
         track_bbs_ids.append(mot_tracker_overlap.update(np.array(frame_bboxes)))
 
     # Draw the bounding boxes and the trajectory
-    draw_bboxes_and_trajectory(first_frame, last_frame, visualization_cfg, track_bbs_ids, dataset, out_path)
-
+    if visualization_cfg:
+        draw_bboxes_and_trajectory(first_frame, last_frame, visualization_cfg, track_bbs_ids, dataset, out_path)
     return track_bbs_ids
 
 
 def save_track(track: np.ndarray, track_path: str) -> None:
-    track_path = "data/trackers/mot_challenge/week3-train/overlap/data/Seq03.txt"  # hardcoded so far
+    #track_path = "data/trackers/mot_challenge/week3-train/overlap/data/Seq03.txt"  # hardcoded so far
     write_PASCAL_to_MOT_txt(track, track_path)
 
 
@@ -55,17 +56,33 @@ def main(cfg):
     dataset = [(key, frames[key]) for key in bboxes.keys()]
     bboxes = list(bboxes.values())
     print("Number of frames: ", len(dataset))
-    track_bbs_ids_overlap = get_overlap_track(
-        out_path=paths["output"],
-        dataset=dataset,
-        bboxes=bboxes,
-        first_frame=model_cfg['first_frame'],
-        last_frame=model_cfg['last_frame'],
-        visualization_cfg=visualization_cfg
-    )
+    if model_cfg["use_OF"]:
+        bboxes = resize_bboxes(bboxes)
+        extract_of_from_dataset(dataset, paths["extracted_optical_flows_path"], model_cfg["of_method"])
+        optical_flows = get_bbox_optical_flows_from_folder(bboxes, paths["extracted_optical_flows_path"])
 
-    if not model_cfg["use_gt"]:
-        save_track(track_bbs_ids_overlap, model_cfg)
+        track_bbs_ids_overlap = task1_3(
+            out_path=paths["output"],
+            dataset=dataset,
+            optical_flows=optical_flows,
+            bboxes=bboxes,
+            first_frame=model_cfg['first_frame'],
+            last_frame=model_cfg['last_frame'],
+            visualization_cfg=visualization_cfg
+        )
+    else:
+        track_bbs_ids_overlap = get_overlap_track(
+            out_path=paths["output"],
+            dataset=dataset,
+            bboxes=bboxes,
+            first_frame=model_cfg['first_frame'],
+            last_frame=model_cfg['last_frame'],
+            visualization_cfg=visualization_cfg
+        )
+    if model_cfg["save_tracking_MOT"]:
+        save_track(track_bbs_ids_overlap, paths['output'])
+
+
 
 
 if __name__ == "__main__":

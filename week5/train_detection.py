@@ -6,12 +6,14 @@ before executing this code it is necessary to execute create_dataset_detection.p
 import argparse
 import sys
 from ultralytics import YOLO
+from src.io_utils import open_config_yaml
 
 
-def main(data_file):
-    model = YOLO("yolov8n.pt")  # load a pretrained model (recommended for training)
+def main(cfg):
+    model = YOLO(cfg["model"])  # load a pretrained model (recommended for training)
     # Use the model
-    model.train(data=data_file, epochs=40, device=0, imgsz=640, workers=2, val=False,
+    # cfg["train_yolo"] should be the .yaml indicating the yolo train instructions
+    model.train(data=cfg["train_yolo"], epochs=cfg["epochs"], device=0, imgsz=640, workers=2, val=False,
                 optimizer="Adam")
     metrics = model.val()
 
@@ -21,6 +23,6 @@ if __name__ == "__main__":
     parser.add_argument("--config", default="configs/train_detection.yaml")
     args = parser.parse_args(sys.argv[1:])
 
-    config_file = args.config
+    config = open_config_yaml(args.config)
 
-    main(config_file)
+    main(config)

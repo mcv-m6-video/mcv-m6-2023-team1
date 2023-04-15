@@ -1,3 +1,7 @@
+"""
+Create dataset for reid, extracting sub-frames from the bounding boxes detected in the gt
+"""
+
 import argparse
 import sys
 from src.io_utils import open_config_yaml, create_dirs, read_gt

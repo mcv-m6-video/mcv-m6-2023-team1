@@ -1,0 +1,8 @@
+train: C:\Users\Usuario\Desktop\Master\mcv-m6-2023-team1\week5\data\detection\train
+val:  C:\Users\Usuario\Desktop\Master\mcv-m6-2023-team1\week5\data\detection\val
+
+# number of classes
+nc: 1
+
+# class names
+names: ["car"]

@@ -1,3 +1,7 @@
+"""
+Visualize single camera tracking
+"""
+
 from src.sort import Sort
 import argparse
 import sys
@@ -37,7 +41,7 @@ def main(cfg):
     img_paths = [i.replace("\\", "/") for i in img_paths]
     grouped_imgs = {}
     for img_path in img_paths:
-        cam_id = img_path[13:17]
+        cam_id = img_path.split("/")[-1][4:8]
         if cam_id in grouped_imgs.keys():
             grouped_imgs[cam_id].append(img_path)
         else:

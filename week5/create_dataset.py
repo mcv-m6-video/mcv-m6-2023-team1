@@ -35,11 +35,11 @@ def read_gt(gt_path):
     return my_dict
 
 
-def get_yolo_format(bbox, image_width, image_height):
-    xmin = int(bbox[1])
-    ymin = int(bbox[2])
-    width = int(bbox[3])
-    height = int(bbox[4])
+def get_yolo_format(ann, image_width, image_height):
+    xmin = int(ann[1])
+    ymin = int(ann[2])
+    width = int(ann[3])
+    height = int(ann[4])
 
     # Calculate the center coordinates of the bounding box
     x_center = float(xmin + (width / 2))

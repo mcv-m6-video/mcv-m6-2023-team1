@@ -1,3 +1,7 @@
+"""
+It extracts from the selected sequences the frames and organizes them in train and validation
+"""
+
 import argparse
 import sys
 from src.utils import open_config_yaml
@@ -99,8 +103,9 @@ def create_set(dataset_dir, seqs, phase):
     for seq in seqs:
         print(f"SEQ {seq}:")
         seq_dir = dataset_dir + seq
-        for cam in os.listdir(seq_dir):
-            print(f"CAM {cam}")
+        cams = os.listdir(seq_dir)
+        for i, cam in enumerate(cams):
+            print(f"CAM {cam} {i}/{len(cams)}")
             video_path = f"{seq_dir}/{cam}/vdo.avi"
             gt_path = f"{seq_dir}/{cam}/gt/gt.txt"
             save_video_frames(f"data/{phase}/", seq, cam, video_path, gt_path)
@@ -108,8 +113,10 @@ def create_set(dataset_dir, seqs, phase):
 
 def main(cfg):
     create_dirs()
-    create_set(cfg["dataset_dir"], cfg["train_seqs"], "train")
-    create_set(cfg["dataset_dir"], cfg["val_seqs"], "val")
+    if "train_seqs" in cfg.keys():
+        create_set(cfg["dataset_dir"], cfg["train_seqs"], "train")
+    if "val_seqs" in cfg.keys():
+        create_set(cfg["dataset_dir"], cfg["val_seqs"], "val")
 
 
 if __name__ == "__main__":

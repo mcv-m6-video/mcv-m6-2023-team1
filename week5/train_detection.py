@@ -1,3 +1,8 @@
+"""
+This code is used to train a Yolov8 model,
+before executing this code it is necessary to execute create_dataset.py in order to have train and validation
+"""
+
 import argparse
 import sys
 from ultralytics import YOLO

@@ -1,6 +1,6 @@
 # Week 5
 
-## 1. Create dataset
+## 1. Create dataset for detection
 Create train and validation splits for training and inference.
 
 Check the config file to specify which sequences to use.
@@ -8,7 +8,7 @@ Check the config file to specify which sequences to use.
 WARNING: Around 30gb of data will be generated if you select all the sequences and it will
 take some time.
 ````
-python create_dataset.py --config=configs/create_dataset.yaml
+python create_dataset_detection.py --config=configs/create_dataset_detection.yaml
 ````
 
 
@@ -29,3 +29,14 @@ No Re-ID is implemented in this version.
 ````
 python track_multi_camera.py --config=configs/track.yaml
 ````
+
+## 4. Create dataset for reid
+Save detected car frames in ground truth organized in folder for every different car.
+````
+python create_dataset_reid.py --config=configs/create_dataset_reid.yaml
+````
+
+## 5. Metric learning
+Metric learning using the previously created datset for reid
+
+TO DO

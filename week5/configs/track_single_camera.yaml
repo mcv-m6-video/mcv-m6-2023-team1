@@ -1,0 +1,3 @@
+model_path: models/best.pt  # runs/detect/train/weights/best.pt
+
+data_path: data/detection/val

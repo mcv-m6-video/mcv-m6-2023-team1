@@ -1,4 +1,5 @@
 dataset_dir: "../dataset/AICity/train/"
-# train_seqs: ["S01", "S02"]
+dst_path: "data/reid"
+train_seqs: ["S01", "S04"]
 val_seqs: ["S03"]
 

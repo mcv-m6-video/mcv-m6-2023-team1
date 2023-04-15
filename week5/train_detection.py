@@ -1,6 +1,6 @@
 """
 This code is used to train a Yolov8 model,
-before executing this code it is necessary to execute create_dataset.py in order to have train and validation
+before executing this code it is necessary to execute create_dataset_detection.py in order to have train and validation
 """
 
 import argparse

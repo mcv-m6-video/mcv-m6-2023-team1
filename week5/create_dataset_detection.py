@@ -4,35 +4,9 @@ It extracts from the selected sequences the frames and organizes them in train a
 
 import argparse
 import sys
-from src.io_utils import open_config_yaml
+from src.io_utils import open_config_yaml, create_dirs, read_gt
 import os
 import cv2
-
-
-def create_dirs():
-    os.makedirs("data", exist_ok=True)
-    os.makedirs("data/train", exist_ok=True)
-    os.makedirs("data/val", exist_ok=True)
-
-
-def read_gt(gt_path):
-    # Open the file for reading
-    with open(gt_path, 'r') as file:
-        # Initialize an empty dictionary
-        my_dict = {}
-        # Loop through each line in the file
-        for line in file:
-            # Split the line into columns
-            columns = line.strip().split(",")
-            # Use the first column as the key and the rest as the values
-            key = columns[0]
-            values = columns[1:]
-            # Add the key-value pair to the dictionary
-            if key not in my_dict.keys():
-                my_dict[key] = [values]
-            else:
-                my_dict[key].append(values)
-    return my_dict
 
 
 def get_yolo_format(ann, image_width, image_height):
@@ -99,29 +73,29 @@ def save_video_frames(dst_path, seq, cam, video_path, gt_path):
     video.release()
 
 
-def create_set(dataset_dir, seqs, phase):
+def create_set(dataset_dir, seqs, phase, dst_path):
     for seq in seqs:
         print(f"SEQ {seq}:")
         seq_dir = dataset_dir + seq
         cams = os.listdir(seq_dir)
         for i, cam in enumerate(cams):
-            print(f"CAM {cam} {i}/{len(cams)}")
+            print(f"CAM {cam} {i+1}/{len(cams)}")
             video_path = f"{seq_dir}/{cam}/vdo.avi"
             gt_path = f"{seq_dir}/{cam}/gt/gt.txt"
-            save_video_frames(f"data/{phase}/", seq, cam, video_path, gt_path)
+            save_video_frames(f"{dst_path}/{phase}", seq, cam, video_path, gt_path)
 
 
 def main(cfg):
-    create_dirs()
+    create_dirs(cfg["dst_path"])
     if "train_seqs" in cfg.keys():
-        create_set(cfg["dataset_dir"], cfg["train_seqs"], "train")
+        create_set(cfg["dataset_dir"], cfg["train_seqs"], "train", cfg["dst_path"])
     if "val_seqs" in cfg.keys():
-        create_set(cfg["dataset_dir"], cfg["val_seqs"], "val")
+        create_set(cfg["dataset_dir"], cfg["val_seqs"], "val", cfg["dst_path"])
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default="configs/create_dataset.yaml")
+    parser.add_argument("--config", default="configs/create_dataset_detection.yaml")
     args = parser.parse_args(sys.argv[1:])
 
     config = open_config_yaml(args.config)

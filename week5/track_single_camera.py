@@ -63,7 +63,7 @@ def main(cfg):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default="configs/track.yaml")
+    parser.add_argument("--config", default="configs/track_single_camera.yaml")
     args = parser.parse_args(sys.argv[1:])
 
     config = open_config_yaml(args.config)

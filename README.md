@@ -1,14 +1,22 @@
 # MCV M6 - Video Analysis
 # Project: Video Surveillance for Road
 
-## Team 01 Members
+## Team 1 Members
 - Rachid Boukir ([email](mailto:rachid.boukir@autonoma.cat))
 - Josep Bravo ([email](mailto:pepbravo11@gmail.com))
 - Alex Martin ([email](mailto:alex.martin@midokura.com))
 - Guillem Martinez ([email](mailto:guillemmarsan@gmail.com))
 - Miquel Romero ([email](mailto:miquel.robla@gmail.com))
 
-In order to run the experiments you can install the needed packages with the `requirements.txt file in this page. 
+## Introduction
+ PENDING
+ 
+## Installation
+### Requirements
+- Python ≥ 3.7
+- Pytorch ≥ 1.8 and and torchvision that matches the PyTorch installation. Install them together at [pytorch.org](https://pytorch.org/).
+- Detectron2 is required for week 3 tasks. You can install it following the instructions in its official [github repository](https://github.com/facebookresearch/detectron2).
+- The other needed packages can be installed using the [requirements.txt](https://github.com/mcv-m6-video/mcv-m6-2023-team1/blob/main/requirements.txt) file.
 ```
 pip install -r requirements.txt
 ```

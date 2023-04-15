@@ -21,8 +21,8 @@ Check the config file to specify where are located the different splits.
 python train_detection.py --config=configs/train_detection.yaml
 ````
 
-## 3. Track multiple cameras (without Re-ID)
-Track multiple cameras from one sequence using a Yolov8 model and SORT.
+## 3. Track singles cameras (without Re-ID)
+Track single cameras from one sequence using a Yolov8 model and SORT.
 It will track all the cameras that are found in the path (data_path) specified in the config file.
 
 No Re-ID is implemented in this version.

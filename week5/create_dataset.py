@@ -4,7 +4,7 @@ It extracts from the selected sequences the frames and organizes them in train a
 
 import argparse
 import sys
-from src.utils import open_config_yaml
+from src.io_utils import open_config_yaml
 import os
 import cv2
 

@@ -1,11 +1,11 @@
-from week5.src.sort import Sort
+from src.sort import Sort
 import argparse
 import sys
 from ultralytics import YOLO
-from src.utils import open_config_yaml
+from src.io_utils import open_config_yaml
 import glob
 import cv2
-from week5.src.plot_utils import Annotator, colors
+from src.plot_utils import Annotator, colors
 
 
 def init_windows(cam_ids, w, h):

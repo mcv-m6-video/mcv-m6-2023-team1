@@ -8,7 +8,7 @@ Check the config file to specify which sequences to use.
 WARNING: Around 30gb of data will be generated if you select all the sequences and it will
 take some time.
 ````
-python create_dataset.py --config=create_dataset.yaml
+python create_dataset.py --config=configs/create_dataset.yaml
 ````
 
 
@@ -18,7 +18,7 @@ do not have a pretrained Yolov8 model for this task.
 
 Check the config file to specify where are located the different splits.
 ````
-python train_detection.py --config=train_detection.yaml
+python train_detection.py --config=configs/train_detection.yaml
 ````
 
 ## 3. Track multiple cameras (without Re-ID)
@@ -27,5 +27,5 @@ It will track all the cameras that are found in the path (data_path) specified i
 
 No Re-ID is implemented in this version.
 ````
-python track_multi_camera.py --config=track.yaml
+python track_multi_camera.py --config=configs/track.yaml
 ````

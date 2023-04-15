@@ -20,6 +20,30 @@
 ```
 pip install -r requirements.txt
 ```
+### Folder Structure
+In this project you will need to download the [AI City Challenge 22](https://www.aicitychallenge.org/2022-data-and-evaluation/) dataset, also the [KITTI Stereo/Optical flow 2012 dataset](https://s3.eu-central-1.amazonaws.com/avg-kitti/data_stereo_flow.zip) and organize the folders as follows:
+```        
+├── mcv-m6-2023-team1
+   ├── dataset
+       ├── AICity_data
+          ├── train
+             ├── S03
+       ├── aic19-track1-mtmc-train
+          ├── train
+             ├── S01
+             ├── S03
+             ├── S04
+       ├── data_stereo_flow
+           ├── testing
+           ├── training
+       ├── results_opticalflow_kitti
+           ├── results
+   ├── src  
+   ├── week1
+      ...
+   ├── week5
+```
+But you have to take into account that you can change the path of the dataset in the .yaml files provided for each task.
 
 ## Week 1
 - [Source Code](https://github.com/mcv-m6-video/mcv-m6-2023-team1/tree/main/week1)

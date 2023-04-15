@@ -1,0 +1,3 @@
+paths:
+  sequence_path: '../dataset/aic19-track1-mtmc-train/train/S03'
+  extracted_frames: '../dataset/w4_frames/SO3'

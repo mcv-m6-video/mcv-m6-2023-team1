@@ -5,6 +5,7 @@ import sys
 from typing import Dict
 
 import cv2
+import numpy as np
 import torch
 # Setup detectron2 logger
 from detectron2.utils.logger import setup_logger
@@ -40,7 +41,7 @@ def task1(cfg: Dict):
     if cfg["model"]["name"] == "yolov5":
         model = torch.hub.load('ultralytics/yolov5', 'yolov5x')
     if cfg["model"]["name"] == "yolov8":
-        model = YOLO('yolov8x.pt')  # load an official model
+        model = YOLO('best.pt')  # load an official model
 
     # if model is faster_cnn or retinaNet, we use detectron2 to load it
     if cfg["model"]["name"] == "faster_rcnn" or cfg["model"]["name"] == "retinanet":
@@ -76,16 +77,22 @@ def task1(cfg: Dict):
                 bounding_boxes, yolo_results_np = results_yolov5_to_bbox(results, ["car", "truck"],
                                                                          cfg["model"]["min_conf"])
             if cfg["model"]["name"] == "yolov8":
-                bounding_boxes, yolo_results_np = results_yolov8_to_bbox(results, ["car", "truck"],
+                bounding_boxes, yolo_results_np = results_yolov8_to_bbox(results, ["person"],
                                                                          cfg["model"]["min_conf"])
 
         if cfg["model"]["name"] == "faster_rcnn" or cfg["model"]["name"] == "retinanet":
             results = model(img)
             bounding_boxes, yolo_results_np = results_detectron2_to_bbox(results, ["car", "truck"],
                                                                          cfg["model"]["min_conf"])
+        if cfg["model"]["ft"]:
+            mapping_ft_labels_to_coco = {'person': 'car', 'bicycle': 'bicycle'}
+            mapping_ft_ids_to_coco = {0: 2, 1: 1}
+            yolo_results_np[:, -1] = np.vectorize(mapping_ft_labels_to_coco.get)(yolo_results_np[:, -1])
+            yolo_results_np[:, -2] = np.vectorize(mapping_ft_ids_to_coco.get)(yolo_results_np[:, -2])
+
 
         if cfg["visualization"]["show_detection"]:
-            img_out = draw_img_with_yoloresults(img, yolo_results_np, ["car", "truck"], gt_test_bboxes[i],
+            img_out = draw_img_with_yoloresults(img, yolo_results_np, ["car"], gt_test_bboxes[i],
                                                 cfg["visualization"]["show_gt"])
             cv2.imshow('frame2', img_out)
             k = cv2.waitKey(30) & 0xff

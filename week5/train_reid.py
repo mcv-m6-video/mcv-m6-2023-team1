@@ -56,7 +56,7 @@ def get_transforms():
     augmentations = {
         "train":
             transforms.Compose([
-                transforms.ColorJitter(brightness=.3, hue=.3),
+                # transforms.ColorJitter(brightness=.3, hue=.3),
                 transforms.RandomRotation(degrees=15),
                 transforms.RandomHorizontalFlip(p=0.5),
                 transforms.Resize((112, 112)),

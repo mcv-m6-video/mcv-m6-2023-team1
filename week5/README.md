@@ -43,3 +43,10 @@ Metric learning using the previously created datset for reid
 ````
 python train_reid.py --config=configs/train_reid.yaml
 ````
+
+## 6. Test metric learning
+Evaluate validation dataset (Precision, Recall, F1Score)
+
+````
+python test_reid.py --config=configs/test_reid.yaml
+````

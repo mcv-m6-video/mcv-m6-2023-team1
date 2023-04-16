@@ -13,7 +13,7 @@ def main(cfg):
     model = YOLO(cfg["model"])  # load a pretrained model (recommended for training)
     # Use the model
     # cfg["train_yolo"] should be the .yaml indicating the yolo train instructions
-    model.train(data=cfg["train_yolo"], epochs=cfg["epochs"], device=0, imgsz=640, workers=2, val=False,
+    model.train(data=cfg["train_yolo"], epochs=cfg["epochs"], device=0, imgsz=640, workers=0, val=False,
                 optimizer="Adam")
     metrics = model.val()
 

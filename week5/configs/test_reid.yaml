@@ -1,0 +1,11 @@
+device: "cuda"
+
+val_path: "data/reid/val"
+
+embedder_size: 256
+
+trunk_weights_path: models/reid/trunk_best15.pth
+embedder_weights_path: models/reid/embedder_best15.pth
+
+th: 0.8  # euclidean distance threshold to determine same car
+

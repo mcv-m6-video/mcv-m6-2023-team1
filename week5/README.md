@@ -40,4 +40,6 @@ python create_dataset_reid.py --config=configs/create_dataset_reid.yaml
 ## 5. Metric learning
 Metric learning using the previously created datset for reid
 
-TO DO
+````
+python train_reid.py --config=configs/train_reid.yaml
+````

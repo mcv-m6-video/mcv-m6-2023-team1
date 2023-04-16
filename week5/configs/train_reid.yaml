@@ -1,0 +1,17 @@
+device: "cuda"
+
+train_path: "data/reid/train"
+val_path: "data/reid/val"
+
+lr: 0.001
+batch_size: 64
+
+num_epochs: 20
+
+loss: "contrastive"  # contrastive, triplet
+
+embedder_size: 256
+
+max_lr: 0.01
+
+test_interval: 1  # every N epochs it validates with validation

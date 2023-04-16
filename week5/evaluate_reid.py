@@ -85,7 +85,7 @@ def main(cfg):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', default='configs/test_reid.yaml')
+    parser.add_argument('--config', default='configs/evaluate_reid.yaml')
     args = parser.parse_args(sys.argv[1:])
     config_path = args.config
 

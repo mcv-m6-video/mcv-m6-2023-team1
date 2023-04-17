@@ -2,7 +2,10 @@ wandb/*
 outputs/*
 dataset/*
 models/*
+*/data/*
+*/runs/*
 *.pt
+.idea/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

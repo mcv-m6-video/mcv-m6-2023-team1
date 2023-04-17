@@ -1,0 +1,8 @@
+paths:
+  extracted_camera_frames: '../dataset/w4_frames/SO3'
+  camera_annots: '../dataset/aic19-track1-mtmc-train/train/S03'
+  save_path: '../output'
+
+visualization:
+  show_detection: False
+  show_gt: False

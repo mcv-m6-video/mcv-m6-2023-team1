@@ -23,10 +23,12 @@ python train_detection.py --config=configs/train_detection.yaml
 ## 3. Track singles cameras
 Track single cameras from one sequence using a Yolov8 model and SORT.
 
-It will generate detections from Yolov8 if they do not exist, and use them
+It will use Yolov8 model defined in the config variable `model_path`.
+
+It will generate detections from Yolov8 in `data/detection_{model_path}` if they do not exist, and use them
 in order to do tracking.
 
-Every cam tracking will be evaluated (IDF1 and HOTA) and saved as a video file.
+Every cam tracking will be evaluated (IDF1 and HOTA) and saved as a video file in folder `tracking_videos`.
 
 ````
 python track_multi_camera.py --config=configs/track.yaml

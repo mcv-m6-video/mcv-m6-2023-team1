@@ -6,7 +6,7 @@ val_path: "data/reid/val"
 lr: 0.001
 batch_size: 64
 
-num_epochs: 20
+num_epochs: 50
 
 loss: "contrastive"  # contrastive, triplet
 

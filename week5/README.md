@@ -11,7 +11,6 @@ take some time.
 python create_dataset_detection.py --config=configs/create_dataset_detection.yaml
 ````
 
-
 ## 2. Train detection model (optional)
 Train a Yolov8 model using the previously created dataset (train and validation) in case you
 do not have a pretrained Yolov8 model for this task.
@@ -21,11 +20,13 @@ Check the config file to specify where are located the different splits.
 python train_detection.py --config=configs/train_detection.yaml
 ````
 
-## 3. Track singles cameras (without Re-ID)
+## 3. Track singles cameras
 Track single cameras from one sequence using a Yolov8 model and SORT.
 
-It will visualize the tracking of all the cameras that are found in the path (data_path) 
-specified in the config file.
+It will generate detections from Yolov8 if they do not exist, and use them
+in order to do tracking.
+
+Every cam tracking will be evaluated (IDF1 and HOTA) and saved as a video file.
 
 ````
 python track_multi_camera.py --config=configs/track.yaml

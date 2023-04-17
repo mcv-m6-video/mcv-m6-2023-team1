@@ -6,7 +6,7 @@ from src.sort import Sort
 import argparse
 import sys
 from ultralytics import YOLO
-from src.io_utils import open_config_yaml
+from src.io_utils import open_config_yaml, save_bboxes_to_file, load_bboxes_from_file
 import glob
 import cv2
 import os
@@ -39,24 +39,6 @@ def check_dir(detections_dir):
         return False
     else:
         return True
-
-
-def save_bboxes_to_file(bboxes, path):
-    """
-    Saves the bounding boxes to a file.
-    :param bboxes: dictionary of bounding boxes
-    :param path: path to save the file
-    """
-    with open(path, "w") as f:
-        yaml.dump(bboxes, f)
-
-
-def load_bboxes_from_file(path):
-    # open the YAML file for reading
-    with open(path, 'r') as file:
-        # load the YAML data from the file
-        yaml_data = yaml.load(file, Loader=yaml.FullLoader)
-    return yaml_data
 
 
 def extract_detections(grouped_imgs, model_path):

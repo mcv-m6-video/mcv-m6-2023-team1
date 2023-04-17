@@ -41,3 +41,21 @@ def read_gt(gt_path):
             else:
                 my_dict[key].append(values)
     return my_dict
+
+
+def save_bboxes_to_file(bboxes, path):
+    """
+    Saves the bounding boxes to a file.
+    :param bboxes: dictionary of bounding boxes
+    :param path: path to save the file
+    """
+    with open(path, "w") as f:
+        yaml.dump(bboxes, f)
+
+
+def load_bboxes_from_file(path):
+    # open the YAML file for reading
+    with open(path, 'r') as file:
+        # load the YAML data from the file
+        yaml_data = yaml.load(file, Loader=yaml.FullLoader)
+    return yaml_data

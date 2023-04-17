@@ -39,6 +39,7 @@ def main(cfg):
 
     img_paths = glob.glob(f"{cfg['data_path']}/*.jpg")
     img_paths = [i.replace("\\", "/") for i in img_paths]
+    img_paths.sort()
     grouped_imgs = {}
     for img_path in img_paths:
         cam_id = img_path.split("/")[-1][4:8]

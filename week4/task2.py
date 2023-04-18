@@ -61,12 +61,12 @@ def main(cfg):
     if cfg['use_gt_bboxes']:
         bboxes = extract_rectangles_from_csv(paths['annotations'])
     else:
-        bboxes = extract_rectangles_from_csv(paths['detected_bboxes'])
+        bboxes = load_bboxes_from_file(paths['detected_bboxes'])
 
     dataset = []
     for f_id, frame in enumerate(frames):
         dataset_tuple = (None, frame)
-        if f_id in bboxes:
+        if bboxes[f_id]:
             dataset_tuple = (f_id, frame)
         dataset.append(dataset_tuple)
 

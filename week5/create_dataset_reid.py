@@ -23,7 +23,7 @@ def save_bbox_frames(dst_path, seq, cam, count, frame, boxes):
         # Extract the sub-image from the frame using the bounding box coordinates
         sub_image = frame[y:y + height, x:x + width]
         # Save the sub-image as a separate image file
-        cv2.imwrite(f"{dst_path}/{car_id}/{seq}_{cam}_{str(count).zfill(6)}.jpg", sub_image)
+        cv2.imwrite(f"{dst_path}/{car_id}/{seq}_{cam}_{str(count).zfill(6)}_{str(x)}_{str(y)}_{str(width)}_{str(height)}.jpg", sub_image)
 
 
 def save_car_frames(dst_path, seq, cam, video_path, gt_path):

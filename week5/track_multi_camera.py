@@ -12,7 +12,11 @@ from src.models import Embedder, HeadlessResnet
 from torchvision.datasets import ImageFolder
 from torchvision import transforms
 
+from src.io_utils import extract_frames
 from scipy.spatial.distance import cdist
+import cv2
+from src.plot_utils import draw_boxes
+import os
 
 
 def get_transforms():
@@ -25,6 +29,64 @@ def get_transforms():
             ])
     }
     return augmentations
+
+
+def assign_ids(dist_matrix, threshold, dataset):
+    # generate metadata to be able to have tracking
+    img_paths = [sample[0].replace("\\", "/") for sample in dataset.samples]
+    metadata = [i.split("/")[-1].split(".")[0].split("_")[1:] for i in img_paths]
+
+    # REID, assign ids depending on distance
+    num_entities = dist_matrix.shape[0]
+    ids = np.zeros(num_entities, dtype=int)
+    current_id = 1
+    for i in range(num_entities):
+        if ids[i] == 0:
+            ids[i] = current_id
+            for j in range(i + 1, num_entities):
+                if dist_matrix[i, j] <= threshold:
+                    ids[j] = current_id
+            current_id += 1
+
+    # add tracking id to metadata
+    for i, id_ in enumerate(ids):
+        metadata[i].append(id_)
+        metadata[i][1] = int(metadata[i][1])
+        metadata[i][2] = int(metadata[i][2])
+        metadata[i][3] = int(metadata[i][3])
+        metadata[i][4] = metadata[i][2] + int(metadata[i][4])  # x1 = x0 + width
+        metadata[i][5] = metadata[i][3] + int(metadata[i][5])  # y1 = y0 + height
+    metadata = sorted(metadata, key=lambda x: x[1])
+    trackings = {}
+    for lst in metadata:
+        key = lst[0]
+        if key not in trackings.keys():
+            trackings[key] = {}
+        subkey = lst[1]
+        if subkey not in trackings[key].keys():
+            trackings[key][subkey] = []
+        value = lst[2:]
+        trackings[key][subkey].append(value)
+
+    return trackings
+
+
+def save_tracking_videos(frames, trackings):
+    os.makedirs("tracking_videos", exist_ok=True)
+    # Set up the video writer
+    fps = 20  # Set the frame rate
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+
+    for i, cam_id in enumerate(frames.keys()):
+        print(f"Saving tracking video for CAM {cam_id} {i+1}/{len(frames.keys())}")
+        frame_size = cv2.imread(frames[cam_id][0]).shape
+        out = cv2.VideoWriter(f'tracking_videos/tracking_reid_{cam_id}.avi', fourcc, fps, (frame_size[1], frame_size[0]))
+        for frame_id, frame_path in enumerate(frames[cam_id]):
+            frame = cv2.imread(frame_path)
+            if frame_id in trackings[cam_id].keys():
+                frame = draw_boxes(frame, trackings[cam_id][frame_id])
+            out.write(frame)
+        out.release()
 
 
 def main(cfg):
@@ -82,10 +144,16 @@ def main(cfg):
         f"Valid: {np.count_nonzero(valid)}"
     )
 
+    # use reid to do tracking
+    trackings = assign_ids(distances, 0.8, dataset)
+    # TODO: evaluate the tracking
+    frames = extract_frames(cfg['data_path'])
+    save_tracking_videos(frames, trackings)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', default='configs/evaluate_reid.yaml')
+    parser.add_argument('--config', default='configs/track_multi_camera.yaml')
     args = parser.parse_args(sys.argv[1:])
     config_path = args.config
 

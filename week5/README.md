@@ -47,9 +47,13 @@ Metric learning using the previously created datset for reid
 python train_reid.py --config=configs/train_reid.yaml
 ````
 
-## 6. Evaluate metric learning
-Evaluate validation dataset (Precision, Recall, F1Score)
+## 6. Track multiple cameras
+Evaluate Siamese network on validation dataset (Precision, Recall, F1Score)
+
+Extract tracking from multiple cameras using Siamese network.
+
+Evaluate the tracking.
 
 ````
-python evaluate_reid.py --config=configs/evaluate_reid.yaml
+python track_multi_camera.py --config=configs/track_multi_camera.yaml
 ````

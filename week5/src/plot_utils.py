@@ -65,4 +65,11 @@ class Annotator:
         return np.asarray(self.im)
 
 
+def draw_boxes(im, boxes):
+    annotator = Annotator(im, line_width=3)
+    for *xyxy, bbox_id in boxes:
+        label = f"{int(bbox_id)}"
+        annotator.box_label(xyxy, label, color=colors(bbox_id, True))
 
+    annotated_frame = annotator.result()
+    return annotated_frame

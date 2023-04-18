@@ -2,13 +2,12 @@ import torch.nn as nn
 import torch
 from torchvision import models
 from collections import OrderedDict
-from torchvision.models import ResNet18_Weights
 
 
 class HeadlessResnet(nn.Module):
     def __init__(self, weights_path=None):
         super(HeadlessResnet, self).__init__()
-        self.model = models.resnet18(weights=ResNet18_Weights)
+        self.model = models.resnet18(pretrained=True)
         self.model.fc = nn.Identity()  # remove last layer
 
         if weights_path is not None:

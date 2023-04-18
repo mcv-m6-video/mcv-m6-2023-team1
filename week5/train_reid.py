@@ -120,13 +120,13 @@ def main(cfg):
             "tuple_miner": miners.TripletMarginMiner(margin=0.2, type_of_triplets="semihard")
         }
 
-    os.makedirs("reid_training", exist_ok=True)
+    os.makedirs(cfg["save_dir"], exist_ok=True)
     record_keeper, _, _ = logging_presets.get_record_keeper(
-        "reid_training/example_logs", "reid_training/example_tensorboard"
+        f"{cfg['save_dir']}/example_logs", f"{cfg['save_dir']}/example_tensorboard"
     )
     hooks = logging_presets.get_hook_container(record_keeper)
     dataset_dict = {"val": val_dataset}
-    model_folder = "reid_training/example_saved_models"
+    model_folder = f"{cfg['save_dir']}/example_saved_models"
 
     # Create the tester
     tester = testers.GlobalEmbeddingSpaceTester(

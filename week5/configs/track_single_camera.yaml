@@ -1,6 +1,6 @@
 model_path: models/best_map_car.pt  # runs/detect/train/weights/best.pt
 
 data_path: data/detection/val
-save_tracking: True
+save_tracking: False
 save_tracking_videos: False
 tracker: overlap

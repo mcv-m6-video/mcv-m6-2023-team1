@@ -6,12 +6,14 @@ val_path: "data/reid/val"
 lr: 0.001
 batch_size: 64
 
-num_epochs: 50
+num_epochs: 20
 
 loss: "contrastive"  # contrastive, triplet
 
-embedder_size: 256
+embedder_size: 128
 
 max_lr: 0.01
 
 test_interval: 1  # every N epochs it validates with validation
+
+save_dir: "miner_siamese_128"

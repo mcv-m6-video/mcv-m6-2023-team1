@@ -34,6 +34,16 @@ def get_transforms():
     return augmentations
 
 
+def remove_duplicates(data):
+    seen = set()
+    result = []
+    for inner_list in data:
+        if inner_list[4] not in seen:
+            seen.add(inner_list[4])
+            result.append(inner_list)
+    return result
+
+
 def assign_ids(dist_matrix, threshold, dataset):
     # generate metadata to be able to have tracking
     img_paths = [sample[0].replace("\\", "/") for sample in dataset.samples]
@@ -70,6 +80,11 @@ def assign_ids(dist_matrix, threshold, dataset):
             trackings[key][subkey] = []
         value = lst[2:]
         trackings[key][subkey].append(value)
+
+    # spaghetti fix for duplicates xd
+    for seq, cam_dict in metadata.items():
+        for cam, frame_boxes in cam_dict.items():
+            trackings[seq][cam] = remove_duplicates(frame_boxes)
 
     return trackings
 

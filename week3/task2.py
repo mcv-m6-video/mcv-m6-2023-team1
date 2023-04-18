@@ -36,6 +36,16 @@ def write_PASCAL_to_MOT_txt_w4(track, output_path):
                 file.write(f"{frame + 1},{track_id + 1},{x1},{y1},{w},{h},1,-1,-1,-1\n")
 
 
+def write_PASCAL_to_MOT_txt_w5(track, output_path):
+    with open(output_path, "w") as file:
+        for frame_id, frame_track in tqdm(sorted(track.items())):
+            for ann in frame_track:
+                x1, y1, x2, y2, track_id = ann
+                w = x2 - x1
+                h = y2 - y1
+                file.write(f"{frame_id},{track_id},{x1},{y1},{w},{h},1,-1,-1,-1\n")
+
+
 def write_gt_to_MOT_txt(track, output_path):
     with open(output_path, "w") as file:
         for frame, frame_track in zip(list(track.keys()), list(track.values())):

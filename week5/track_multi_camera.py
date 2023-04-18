@@ -1,6 +1,7 @@
 """
 This code is inspired by Team1 2022 in order to evaluate reid
 """
+from typing import Dict
 
 import numpy as np
 import argparse
@@ -17,6 +18,8 @@ from scipy.spatial.distance import cdist
 import cv2
 from src.plot_utils import draw_boxes
 import os
+
+from week3.task2 import write_PASCAL_to_MOT_txt_w5
 
 
 def get_transforms():
@@ -89,6 +92,18 @@ def save_tracking_videos(frames, trackings):
         out.release()
 
 
+def postprocess(tracking_per_cam: Dict[str, Dict], max_frames_per_cam: Dict[str, int]):
+    """
+    This function fills the gaps in the tracking dict, by adding an empty list for each frame
+    where no object was detected.
+    """
+    for cam_id, tracking in sorted(tracking_per_cam.items()):
+        for frame_id in range(max_frames_per_cam[cam_id]):
+            if frame_id not in tracking.keys():
+                tracking_per_cam[cam_id][frame_id] = []
+    return tracking_per_cam
+
+
 def main(cfg):
     trunk_model = HeadlessResnet(cfg["trunk_weights_path"]).to(cfg["device"])
     embedder_model = Embedder(512, cfg["embedder_size"], cfg["embedder_weights_path"]).to(cfg["device"])
@@ -143,12 +158,25 @@ def main(cfg):
         f"Total Sum: {sum([true_positives, true_negatives, false_positives, false_negatives])} \n"
         f"Valid: {np.count_nonzero(valid)}"
     )
-
     # use reid to do tracking
-    trackings = assign_ids(distances, 0.8, dataset)
-    # TODO: evaluate the tracking
-    frames = extract_frames(cfg['data_path'])
-    save_tracking_videos(frames, trackings)
+    tracking = assign_ids(distances, 0.8, dataset)
+    if cfg['save_tracking']:
+        frames_per_camera = {
+            'c010': 2141,
+            'c011': 2279,
+            'c012': 2422,
+            'c013': 2415,
+            'c014': 2332,
+            'c015': 1928,
+
+        }
+        post_tracking = postprocess(tracking, frames_per_camera)
+        for camera in tracking.keys():
+            os.makedirs(f"tracking", exist_ok=True)
+            write_PASCAL_to_MOT_txt_w5(post_tracking[camera], f"tracking/{camera}.txt")
+    if cfg['save_tracking_videos']:
+        frames = extract_frames(cfg['data_path'])
+        save_tracking_videos(frames, tracking)
 
 
 if __name__ == "__main__":

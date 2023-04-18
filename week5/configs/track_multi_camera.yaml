@@ -7,6 +7,9 @@ embedder_size: 256
 
 trunk_weights_path: models/reid/trunk_best15.pth
 embedder_weights_path: models/reid/embedder_best15.pth
+save_tracking_videos: False
+save_tracking: True
+save_tracking_path: "data/tracking"
 
 th: 0.8  # euclidean distance threshold to determine same car
 

@@ -116,6 +116,11 @@ class MOTTrackerOverlap:
                 used_ids.add(self.track_id)
                 self.track_id += 1
 
+        # Remove the tracks that are not updated
+        for track_id in list(self.tracks.keys()):
+            if track_id not in used_ids:
+                del self.tracks[track_id]
+
         self.frame_id += 1
         return np.array(updated_dets)
 

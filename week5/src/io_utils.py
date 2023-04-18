@@ -88,10 +88,11 @@ def extract_detections(grouped_imgs, model_path):
             os.makedirs(f"data/detection_{detections_dir}/{cam_id}", exist_ok=True)
 
         bboxes = {}
-        for cam_id, imgs in grouped_imgs.items():
+        for cam_id, imgs in sorted(grouped_imgs.items()):
             cam_boxes = []
             print(f"Extracting detections from CAM {cam_id}")
-            for frame_id, img in tqdm(enumerate(imgs)):
+            for frame_id, img in tqdm(enumerate(sorted(imgs))):
+                frame_id += 1
                 result = model.predict(img, conf=0.5, device=0)
                 boxes = result[0].boxes.boxes
                 boxes = boxes.detach().cpu().numpy()

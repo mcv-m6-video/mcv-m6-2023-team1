@@ -1,6 +1,11 @@
 # MCV M6 - Video Analysis
 # Project: Video Surveillance for Road
 
+## Final presentation
+The same as Week5:
+- [Final Presentation](https://docs.google.com/presentation/d/1aG9oz3pBwZF4IP2PRvAQEiDEt2cDAEpn3adElMmn16w/edit?usp=sharing)
+
+
 ## Team 1 Members
 - Rachid Boukir ([email](mailto:rachid.boukir@autonoma.cat))
 - Josep Bravo ([email](mailto:pepbravo11@gmail.com))
